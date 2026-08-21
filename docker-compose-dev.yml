@@ -1,0 +1,128 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Datasource
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # OAuth2 - Kakao
+      KAKAO_CLIENT_ID: 089f5653f72d2af366fde90b6426981a
+      KAKAO_CLIENT_SECRET: wdv5R92fj0CCIdB7MoIgtRmy9YOrXA9m
+      # OAuth2 - Naver
+      NAVER_CLIENT_ID: uSaUNwhWRD8rLbbLW9k4
+      NAVER_CLIENT_SECRET: 3lVqFixb5a
+      # JWT
+      JWT_SECRET: 1a6b88d05b00627b9a6bb0c15cc46bb5b0f9040b1c49b93242184242109ca584
+      # Kakao Admin
+      KAKAO_ADMIN_KEY: 5fabc922663586a8e92c1bc00ee44567
+      # App
+      APP_FRONTEND_URL: http://localhost:3000
+      AI_SERVER_URL: http://ai-server:8000
+      SPRING_PROFILES_ACTIVE: dev
+      # MinIO (dev 기본값)
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: picturebook
+    volumes:
+      - app-logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai-server:
+        condition: service_started
+      minio:
+        condition: service_started
+
+  ai-server:
+    build: ../picturebook-ai
+    ports:
+      - "8000:8000"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8100
+    depends_on:
+      - chromadb
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8100:8000"
+    volumes:
+      - chromadb-data:/chroma/chroma
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+volumes:
+  app-logs:
+  pgdata:
+  prometheus-data:
+  grafana-data:
+  chromadb-data:
+  minio-data:

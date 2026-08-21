@@ -1,0 +1,95 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Datasource
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Redis
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST:-host.docker.internal}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT:-6379}
+      # OAuth2 - Kakao (Spring 속성 직접 매핑)
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD: client_secret_post
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE: authorization_code
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI: "{baseUrl}/login/oauth2/code/kakao"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE: profile_nickname,profile_image
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI: https://kauth.kakao.com/oauth/authorize
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI: https://kauth.kakao.com/oauth/token
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI: https://kapi.kakao.com/v2/user/me
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: id
+      # OAuth2 - Naver
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_REDIRECT_URI: "{baseUrl}/login/oauth2/code/naver"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_AUTHORIZATION_GRANT_TYPE: authorization_code
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_SCOPE: name,email,profile_image
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_NAME: Naver
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_NAVER_AUTHORIZATION_URI: https://nid.naver.com/oauth2.0/authorize
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_NAVER_TOKEN_URI: https://nid.naver.com/oauth2.0/token
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_NAVER_USER_INFO_URI: https://openapi.naver.com/v1/nid/me
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_NAVER_USER_NAME_ATTRIBUTE: response
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRY: 1800000
+      JWT_REFRESH_TOKEN_EXPIRY: 1209600000
+      # Kakao Admin
+      KAKAO_ADMIN_KEY: ${KAKAO_ADMIN_KEY}
+      # App
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-https://mongle.cloud}
+      # MinIO (호스트에서 systemd로 실행 중인 MinIO를 재사용)
+      MINIO_ENDPOINT: http://host.docker.internal:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-picturebook}
+      # Monitoring
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
+      MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
+      SPRING_PROFILES_ACTIVE: prod
+      # 프록시 뒤에서 https 인식
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+    volumes:
+      - app-logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+volumes:
+  app-logs:
+  prometheus-data:
+  grafana-data:

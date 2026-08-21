@@ -1,0 +1,26 @@
+language: "ko-KR"
+
+reviews:
+  profile: "chill"
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  instructions: |
+    - 헥사고날 아키텍처 원칙에 따라 의존성 방향이 올바른지 확인해줘. (Domain/Application이 Infrastructure에 의존하면 안 됨)
+    - 새로운 엔티티나 DTO 추가 시 빌더 패턴이나 정적 팩토리 메서드 사용을 권장해줘.
+    - 한국어 주석과 변수명 컨벤션을 준수했는지 봐줘.
+  path_filters:
+    - "**/build.gradle"
+    - "**/settings.gradle"
+    - "**/gradlew"
+    - "**/gradlew.bat"
+    - "gradle/**"
+    - "**/build/**"
+    - "**/.gradle/**"
+    - "**/CLAUDE.md"
+    - "**/*.md"
+    - "**/test/**"
+
+chat:
+  auto_reply: true
