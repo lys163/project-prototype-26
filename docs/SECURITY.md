@@ -31,9 +31,9 @@
 
 [CONFIRMED] `POST /api/categories`는 `SecurityConfig`의 명시적인 authenticated matcher에 포함되어 있지 않습니다.
 
-[CONFIRMED] Reading Goal GET/PUT과 Reading Progress GET/PUT/complete POST는 HTTP method와 구체적인 path pattern 기준으로 authentication을 요구합니다. `PATCH /api/user/profile`, `PATCH /api/user/profile-image`, `GET /api/books/{bookId}/sales/monthly`는 여전히 명시적인 authenticated matcher에 포함되어 있지 않습니다. 해당 controller는 `@AuthenticationPrincipal`을 사용하지만 route는 `anyRequest().permitAll()` default에 남아 있습니다.
+[CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST와 Profile/Profile Image PATCH는 HTTP method와 구체적인 path pattern 기준으로 authentication을 요구합니다. `GET /api/books/{bookId}/sales/monthly`는 여전히 명시적인 authenticated matcher에 포함되어 있지 않습니다. 해당 controller는 `@AuthenticationPrincipal`을 사용하지만 route는 `anyRequest().permitAll()` default에 남아 있습니다.
 
-[CONFIRMED] `SecurityConfig` characterization test는 Reading Goal과 Reading Progress endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`와 `GET /api/books/{bookId}`가 계속 허용되는 것을 확인합니다.
+[CONFIRMED] `SecurityConfig` characterization test는 Reading Goal, Reading Progress와 Profile 수정 endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다.
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 

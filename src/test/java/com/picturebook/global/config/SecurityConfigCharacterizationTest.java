@@ -2,6 +2,7 @@ package com.picturebook.global.config;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +34,7 @@ import com.picturebook.global.security.oauth2.OAuth2SuccessHandler;
 class SecurityConfigCharacterizationTest {
 
     private static final String BOOK_ID = "11111111-1111-1111-1111-111111111101";
+    private static final String USER_ID = "22222222-2222-2222-2222-222222222202";
 
     @Autowired
     private MockMvc mockMvc;
@@ -143,6 +146,36 @@ class SecurityConfigCharacterizationTest {
                         .with(user("user").roles("USER")))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void profileUpdateRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(patch("/api/user/profile"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void profileUpdateAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(patch("/api/user/profile").with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void profileImageUpdateRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(patch("/api/user/profile-image"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void profileImageUpdateAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(patch("/api/user/profile-image").with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void publicUserProfileAllowsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/user/{userId}/profile", USER_ID))
+                .andExpect(status().isNoContent());
+    }
 }
 
 @RestController
@@ -190,6 +223,21 @@ class SecurityCharacterizationEndpoints {
 
     @PostMapping("/api/books/{bookId}/reading-progress/complete")
     ResponseEntity<Void> completeReadingProgress() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/api/user/profile")
+    ResponseEntity<Void> updateProfile() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/api/user/profile-image")
+    ResponseEntity<Void> updateProfileImage() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/user/{userId}/profile")
+    ResponseEntity<Void> publicUserProfile() {
         return ResponseEntity.noContent().build();
     }
 }

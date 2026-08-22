@@ -2,7 +2,7 @@
 
 ## Baseline
 
-[CONFIRMED] 이 문서는 `docs/REPOSITORY_AUDIT.md`의 2026-08-22, `main`, P0-2 Reading Goal authorization source 기준 commit `ab96932` audit baseline을 따릅니다.
+[CONFIRMED] 이 문서는 `docs/REPOSITORY_AUDIT.md`의 2026-08-22, `main`, P0-2 Reading Progress authorization source 기준 commit `6d04623` 및 현재 Profile authorization working tree audit baseline을 따릅니다.
 
 [CONFIRMED] P0-1에서 focused test, 전체 Gradle test, clean build를 실행해 PASS했으며 GitHub Actions CI의 실제 실행도 PASS했습니다. Application runtime과 Docker Compose 실행은 아직 검증되지 않았습니다.
 
@@ -68,8 +68,8 @@ src/main/java/com/picturebook/
 
 ## Test 상태
 
-[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 23개 automated test가 있습니다.
+[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 28개 automated test가 있습니다.
 
-[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Goal authorization `main` push CI PASS이며, 이번 Reading Progress authorization 변경은 아직 원격 CI 실행 전입니다.
+[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization `main` push CI PASS이며, 이번 Profile authorization 변경은 아직 원격 CI 실행 전입니다.
 
 [UNKNOWN] Application runtime과 external dependency가 필요한 통합 동작은 아직 검증되지 않았습니다.

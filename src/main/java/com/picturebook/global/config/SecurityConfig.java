@@ -118,6 +118,14 @@ public class SecurityConfig {
                                 "/api/reading-goals"
                         ).authenticated()
                         .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/user/profile"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/user/profile-image"
+                        ).authenticated()
+                        .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/user/*/profile"
                         ).permitAll()
