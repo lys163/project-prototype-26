@@ -32,7 +32,7 @@
 
 [CONFIRMED] 마지막 authorization rule은 `anyRequest().permitAll()`이며, 앞선 rule과 일치하지 않는 endpoint는 public입니다.
 
-[CONFIRMED] `GET /api/reading-goals`와 `PUT /api/reading-goals`는 명시적인 authenticated matcher에 포함됩니다. `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`, `POST /api/categories`는 여전히 명시적인 authenticated matcher에 포함되지 않습니다. 일부 endpoint는 `@AuthenticationPrincipal`을 사용하지만 route level authentication은 permit-all default에 의존합니다.
+[CONFIRMED] Reading Goal GET/PUT과 Reading Progress GET/PUT/complete POST는 명시적인 authenticated matcher에 포함됩니다. `PATCH /api/user/profile`, `PATCH /api/user/profile-image`, `GET /api/books/{bookId}/sales/monthly`, `POST /api/categories`는 여전히 명시적인 authenticated matcher에 포함되지 않습니다. 해당 endpoint는 route level에서 permit-all default에 남아 있습니다.
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 
@@ -52,8 +52,8 @@
 
 ## 검증 상태
 
-[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 16개 automated test가 있습니다. Characterization test는 `/api/reading-goals`의 anonymous GET/PUT이 `401`이고 authenticated GET/PUT이 Security를 통과하며 anonymous `GET /api/books`가 계속 허용되는 것을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
+[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 23개 automated test가 있습니다. Characterization test는 Reading Goal과 Reading Progress endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`와 `GET /api/books/{bookId}`가 계속 허용되는 것을 확인합니다. 전체 API contract test coverage는 아직 없습니다.
 
-[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 OAuth token logging 제거 CI PASS이며, 이번 reading-goals authorization 변경은 아직 원격 CI 실행 전입니다.
+[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Goal authorization CI PASS이며, 이번 Reading Progress authorization 변경은 아직 원격 CI 실행 전입니다.
 
 [UNKNOWN] Application runtime 및 external dependency를 포함한 API 통합 동작은 아직 검증되지 않았습니다.

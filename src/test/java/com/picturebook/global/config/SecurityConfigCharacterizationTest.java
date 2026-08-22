@@ -31,6 +31,8 @@ import com.picturebook.global.security.oauth2.OAuth2SuccessHandler;
 @Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class SecurityConfigCharacterizationTest {
 
+    private static final String BOOK_ID = "11111111-1111-1111-1111-111111111101";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -52,6 +54,12 @@ class SecurityConfigCharacterizationTest {
     @Test
     void publicBookListAllowsAnonymousRequests() throws Exception {
         mockMvc.perform(get("/api/books"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void publicBookDetailAllowsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/books/{bookId}", BOOK_ID))
                 .andExpect(status().isNoContent());
     }
 
@@ -96,6 +104,45 @@ class SecurityConfigCharacterizationTest {
         mockMvc.perform(put("/api/reading-goals").with(user("user").roles("USER")))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void readingProgressGetRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/books/{bookId}/reading-progress", BOOK_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readingProgressPutRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(put("/api/books/{bookId}/reading-progress", BOOK_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readingProgressCompleteRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(post("/api/books/{bookId}/reading-progress/complete", BOOK_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readingProgressGetAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/api/books/{bookId}/reading-progress", BOOK_ID)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void readingProgressPutAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(put("/api/books/{bookId}/reading-progress", BOOK_ID)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void readingProgressCompleteAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(post("/api/books/{bookId}/reading-progress/complete", BOOK_ID)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
 }
 
 @RestController
@@ -103,6 +150,11 @@ class SecurityCharacterizationEndpoints {
 
     @GetMapping("/api/books")
     ResponseEntity<Void> publicBookList() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/books/{bookId}")
+    ResponseEntity<Void> publicBookDetail() {
         return ResponseEntity.noContent().build();
     }
 
@@ -123,6 +175,21 @@ class SecurityCharacterizationEndpoints {
 
     @PutMapping("/api/reading-goals")
     ResponseEntity<Void> putReadingGoal() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/books/{bookId}/reading-progress")
+    ResponseEntity<Void> getReadingProgress() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/api/books/{bookId}/reading-progress")
+    ResponseEntity<Void> putReadingProgress() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/books/{bookId}/reading-progress/complete")
+    ResponseEntity<Void> completeReadingProgress() {
         return ResponseEntity.noContent().build();
     }
 }

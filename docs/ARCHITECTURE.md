@@ -54,7 +54,7 @@ Production Compose
 
 [CONFIRMED] Spring Security는 stateless OAuth2/JWT 구조이며 선택된 endpoint에 명시적으로 authentication을 요구합니다. 마지막 authorization rule은 `anyRequest().permitAll()`입니다.
 
-[CONFIRMED] `GET /api/reading-goals`와 `PUT /api/reading-goals`는 HTTP method와 구체적인 path 기준으로 authentication을 요구합니다. Reading-progress 관련 endpoint와 `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다. 모든 authenticated user에는 `ROLE_USER`가 부여되며 다른 role 또는 method-level authorization은 발견되지 않았습니다.
+[CONFIRMED] Reading Goal GET/PUT과 Reading Progress GET/PUT/complete POST는 HTTP method와 구체적인 path pattern 기준으로 authentication을 요구합니다. `PATCH /api/user/profile`, `PATCH /api/user/profile-image`, `GET /api/books/{bookId}/sales/monthly`, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다. 모든 authenticated user에는 `ROLE_USER`가 부여되며 다른 role 또는 method-level authorization은 발견되지 않았습니다.
 
 ## AI-generation 경계
 
@@ -78,7 +78,7 @@ Production Compose
 
 ## 현재 operational gap
 
-[CONFIRMED] 이 repository에는 4개 test class와 16개 automated test가 있으며 focused test, 전체 Gradle test, clean build가 PASS했습니다. 현재 test는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출의 최소 안전망이며 전체 API/runtime coverage는 아닙니다.
+[CONFIRMED] 이 repository에는 4개 test class와 23개 automated test가 있으며 focused test, 전체 Gradle test, clean build가 PASS했습니다. 현재 test는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출의 최소 안전망이며 전체 API/runtime coverage는 아닙니다.
 
 [CONFIRMED] Flyway, Liquibase, versioned migration directory/file은 없으며 default/development는 Hibernate `create`, production Compose는 `update`를 설정합니다.
 

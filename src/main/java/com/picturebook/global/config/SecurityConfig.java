@@ -86,6 +86,18 @@ public class SecurityConfig {
                                 "/api/books/*/publish/paid"
                         ).authenticated()
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/books/*/reading-progress"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/books/*/reading-progress"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/books/*/reading-progress/complete"
+                        ).authenticated()
+                        .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/books/*/likes"
                         ).authenticated()
