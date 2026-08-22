@@ -25,10 +25,26 @@
 
 [CONFIRMED] `OAuth2SuccessHandler`는 login 성공 후 access token과 refresh token을 모두 logging합니다.
 
+[CONFIRMED] OAuth2 success handler는 access token을 frontend callback URL의 query parameter로 전달합니다.
+
 [CONFIRMED] `SecurityConfig`는 `anyRequest().permitAll()`로 끝납니다. Authorization은 각 protected route가 해당 rule 앞에 명시적으로 나열되는지에 달려 있습니다.
 
 [CONFIRMED] `POST /api/categories`는 `SecurityConfig`의 명시적인 authenticated matcher에 포함되어 있지 않습니다.
 
+[CONFIRMED] `/api/reading-goals`, `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`도 명시적인 authenticated matcher에 포함되어 있지 않습니다. 해당 controller는 `@AuthenticationPrincipal`을 사용하지만 route는 `anyRequest().permitAll()` default에 남아 있습니다.
+
+[CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
+
+[CONFIRMED] Presigned upload request에는 filename과 content type의 `@NotBlank` validation만 있습니다. MIME allowlist, upload size, quota 검증은 발견되지 않았고 request의 `contentType`은 presigned request 생성에 사용되지 않습니다.
+
+[CONFIRMED] GitHub Actions는 self-hosted runner host의 `.env`를 workflow workspace로 복사합니다. Repository에는 AWS managed-secret integration 또는 다른 production secret-management implementation이 없습니다.
+
+## Production release gate
+
+[CONFIRMED] 승인된 `AGENTS.md` 운영 규칙은 production deployment 전에 secret/token logging 제거, 노출 가능 credential의 rotation 필요 여부, endpoint authorization, object-storage 공개 범위, secret value를 포함하지 않은 verification result를 검토하도록 요구합니다.
+
+[CONFIRMED] 해결되지 않은 중대한 security issue가 있으면 production deployment를 진행하지 않고 사람에게 보고해야 합니다. 실제 credential rotation 또는 production setting 변경에는 별도의 사람 authorization이 필요합니다.
+
 ## 미확인 사항
 
-[UNKNOWN] Secret rotation status, provider-console configuration, production TLS termination, WAF rule, network control, log retention/access control, incident response process, dependency vulnerability status는 이 repository에서 확정할 수 없습니다.
+[UNKNOWN] Secret/credential rotation status, self-hosted runner workspace의 `.env` cleanup, provider-console configuration, production TLS termination, WAF rule, network control, log retention/access control, incident response process, dependency vulnerability status는 이 repository에서 확정할 수 없습니다.

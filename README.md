@@ -1,234 +1,206 @@
-# AI 그림책 제작 플랫폼 — 백엔드 개발 가이드.
+# PictureBook Server
 
-> **Tech Stack**: Spring Boot 4.x · Java 21+ · PostgreSQL 16 · Redis  
-> DDD (Domain-Driven Design)
+사용자가 그림책을 탐색하고 읽으며, 궁극적으로 입력한 이야기로 AI 그림책을 생성할 수 있도록 만드는 웹 서비스의 Spring Boot backend입니다.
 
----
+현재 repository에는 login, 사용자·작가 정보, 책 탐색·열람, community interaction, ranking, report, reading progress, paid publication, MinIO upload URL 등의 backend 기능이 구현되어 있습니다. AI story/image generation 실행 flow는 아직 구현되지 않았습니다.
 
-## 1. 브랜치 전략 (Git Flow 기반)
+현재 상태의 기준은 [Repository Audit](docs/REPOSITORY_AUDIT.md)입니다.
 
-### 1.1 브랜치 구조
+## 1. 프로젝트 소개
 
-```
-main (production)
- └── develop (integration)
-      └── feature/{도메인}/{작업내용}
-```
+PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authentication, object storage 연동을 담당합니다. Frontend source와 외부 AI server source는 이 repository에 포함되어 있지 않습니다.
 
-| 브랜치 | 용도 | 생성 기준 | 병합 대상 |
-|--------|------|-----------|-----------|
-| `main` | 운영 배포 코드 | — | — |
-| `develop` | 통합 개발 브랜치 | `main` 에서 최초 생성 | `main` (릴리즈 시) |
-| `feature/*` | 기능 개발 | `develop` | `develop` (PR) |
+서비스의 최종 목표는 사용자의 text input을 이야기와 page content로 구성하고, 일관된 character·style·layout을 적용한 그림책을 생성·저장·공유할 수 있게 하는 것입니다. 이 목표와 현재 구현 상태는 구분해서 관리합니다.
 
-### 1.2 브랜치 네이밍 컨벤션
+## 2. 현재 개발 상태
 
-DDD 도메인 기준으로 브랜치를 분류합니다.
+### 구현 완료
 
-```
-feature/user/social-login-kakao
-feature/book/create-book-api
-feature/page/stt-text-input
-feature/character/consistency-prompt
-```
+다음 항목은 source/API level에서 확인됐습니다. 현재 compile 및 runtime 동작은 최신 audit에서 실행 검증되지 않았습니다.
 
-### 1.3 PR 규칙
+- Kakao/Naver OAuth2 social login
+- JWT access token과 Redis refresh token 기반 인증
+- User profile, author profile·통계·수익·summary
+- 공개·개인·좋아요·bestseller 책 목록과 상세 조회
+- 유료 출판 전환과 유료 책 preview/ownership 확인
+- Review, like, follow/unfollow, report
+- Reading progress와 monthly reading goal
+- Category, banner, 월간·주간 ranking
+- MinIO presigned upload URL과 object-storage abstraction
+- Swagger/OpenAPI, Actuator, Prometheus 연동 구성
 
-- `develop` ← `feature/*` : 최소 1명 코드 리뷰 승인 필수
-- `main` ← `release/*` : 팀 전원 승인 + QA 통과
-- PR 제목: `[도메인] 작업 요약` (예: `[Book] 책 생성 API 구현`)
-- Squash Merge 사용 → develop 히스토리를 깔끔하게 유지
+### 개발 예정 또는 미구현
 
----
+- Book/Page/Character 생성·편집 API
+- Auto-save 실행 flow와 Purchase 생성·결제 API
+- AI story/text/image/cover generation 실행 flow
+- AI provider client, asynchronous worker 및 generation orchestration
+- Keyword Search 및 별도 search engine integration
+- Automated test source와 API contract test
+- Versioned Database migration
+- AWS target architecture 설계와 infrastructure 구축
+- 기존 PostgreSQL·Redis·MinIO의 migration 및 cutover
+- 누락된 monitoring configuration과 재현 가능한 deployment 검증
 
-## 2. 커밋 컨벤션 (Conventional Commits)
+AI provider/model, Queue, Vector Database, Database migration 도구, AWS Service와 IaC 도구는 아직 결정되지 않았습니다.
 
-### 2.1 커밋 메시지 형식
+## 3. 기술 Stack
 
-```
-<type>(<scope>): <subject>
+| 영역 | 현재 확인된 기술·상태 |
+| --- | --- |
+| Backend | Java 21, Spring Boot 4.0.5, Spring MVC, Gradle Wrapper 9.4.1 |
+| Persistence | PostgreSQL, Spring Data JPA, Hibernate, 일부 `jsonb` mapping |
+| Redis | Spring Data Redis, refresh token 저장·조회·삭제 용도 |
+| Object Storage | MinIO Java SDK 8.6.0, presigned URL, storage abstraction |
+| Authentication | Spring Security, OAuth2 Client, Kakao/Naver, JWT |
+| API 문서 | SpringDoc OpenAPI, Swagger UI |
+| Container | Docker, Docker Compose |
+| CI/CD | GitHub Actions, self-hosted runner, host-oriented Compose deployment |
+| Monitoring | Spring Actuator, Prometheus registry, Prometheus/Grafana Compose 정의. Repository 내부 monitoring file은 누락됨 |
+| AI | AI-generation entity와 development Compose reference만 존재. 실행 integration은 미구현 |
+| AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
+| Test | JUnit Platform과 일부 test dependency는 구성됐으나 `src/test` 없음 |
+| Database migration | Versioned migration 도구와 migration file 없음 |
 
-<body>        ← 선택
-<footer>      ← 선택
-```
+## 4. Architecture 개요
 
-### 2.2 Type 정의
+현재 application은 package-oriented 단일 Spring Boot service입니다.
 
-| Type | 의미 | 예시 |
-|------|------|------|
-| `feat` | 새 기능 | `feat(book): 책 생성 API 구현` |
-| `fix` | 버그 수정 | `fix(page): 페이지 순서 변경 시 중복 번호 수정` |
-| `refactor` | 리팩터링 (동작 변경 없음) | `refactor(user): UserService 도메인 이벤트 분리` |
-| `docs` | 문서 수정 | `docs(readme): API 명세 업데이트` |
-| `test` | 테스트 추가/수정 | `test(book): BookService 단위 테스트 추가` |
-| `chore` | 빌드/설정 변경 | `chore(docker): compose 네트워크 설정 변경` |
-| `style` | 코드 포맷팅 | `style(global): 들여쓰기 통일` |
-| `perf` | 성능 개선 | `perf(page): 페이지 목록 쿼리 N+1 해결` |
-
-### 2.3 Scope (DDD Bounded Context 기반)
-
-```
-user, book, page, character, ai-generation, auto-save, auth, infra
-```
-
-### 2.4 커밋 예시
-
-```
-feat(book): 책 생성 및 상태 전이 도메인 로직 구현
-
-- Book 엔티티에 상태 전이 메서드 추가 (DRAFT → IN_PROGRESS → COMPLETED)
-- BookCreatedEvent 도메인 이벤트 발행
-- 잘못된 상태 전이 시 InvalidBookStatusException 발생
-
-Refs: #42
+```text
+Frontend / External Client (이 repository에 없음)
+  -> Spring MVC REST API
+       -> Spring Security: OAuth2 + JWT filter
+       -> Services / Spring Data JPA -> PostgreSQL
+       -> RedisTemplate -> Redis refresh token
+       -> ObjectStoragePort / MinIO SDK -> MinIO
 ```
 
----
+현재 deployment는 `main` push 시 self-hosted GitHub Actions runner가 host의 configuration을 사용해 Docker Compose stack을 재기동하는 구조입니다. Production Compose는 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 존재한다고 가정합니다.
 
-## 3. 버전 관리 (Semantic Versioning)
+AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 결정되지 않았습니다. 현재 구조와 향후 AWS target을 동일한 Architecture로 취급하지 않습니다.
 
-### 3.1 버전 형식
+상세 내용은 [Architecture 문서](docs/ARCHITECTURE.md)를 참고합니다.
 
-```
-v{MAJOR}.{MINOR}.{PATCH}[-{PRE_RELEASE}]
-```
+## 5. 로컬 개발 및 실행 방법
 
-| 구분 | 올리는 시점 | 예시 |
-|------|-------------|------|
-| MAJOR | 호환 불가 API 변경 | `v1.0.0` → `v2.0.0` |
-| MINOR | 하위 호환 기능 추가 | `v1.0.0` → `v1.1.0` |
-| PATCH | 하위 호환 버그 수정 | `v1.1.0` → `v1.1.1` |
-| PRE_RELEASE | 릴리즈 후보 | `v1.2.0-rc.1` |
+### 필요한 개발 환경
 
-### 3.2 릴리즈 프로세스
+- Java 21
+- Repository에 포함된 Gradle Wrapper
+- Docker 및 Docker Compose: Compose 기반 실행 시 필요
+- PostgreSQL, Redis, MinIO: application 실행에 필요한 external dependency
 
-```
-1. develop에서 release/v1.2.0 브랜치 생성
-2. 버전 번호 업데이트 (build.gradle)
-3. QA 및 버그 수정
-4. main에 머지 + 태그 생성 (v1.2.0)
-5. develop에 역머지
-```
+### 환경 설정
 
-## 3. DDD 기반 설계 가이드
+실행 환경에 따라 다음 종류의 configuration이 필요합니다. 실제 Secret 값은 repository나 문서에 기록하지 않습니다.
 
-### 3.1 Bounded Context 분리
+- Database: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
+- Redis: `SPRING_DATA_REDIS_HOST`, `SPRING_DATA_REDIS_PORT`
+- OAuth2: `KAKAO_CLIENT_ID`, `KAKAO_CLIENT_SECRET`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
+- JWT: `JWT_SECRET`, `JWT_ACCESS_TOKEN_EXPIRY`, `JWT_REFRESH_TOKEN_EXPIRY`
+- Application: `APP_FRONTEND_URL`, `KAKAO_ADMIN_KEY`
+- MinIO: `MINIO_ENDPOINT`, `MINIO_PUBLIC_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`
+- Profile: `SPRING_PROFILES_ACTIVE`
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 AI 그림책 플랫폼                      │
-├─────────────┬──────────────┬────────────────────────┤
-│  User       │  Book        │  AI Generation         │
-│  Context    │  Context     │  Context               │
-│             │              │                        │
-│ · User      │ · Book       │ · TextRefinementLog    │
-│             │ · Page       │ · ImageGenerationLog   │
-│             │ · Character  │ · CoverGenerationLog   │
-│             │ · PageChar   │                        │
-│             │ · AutoSave   │                        │
-├─────────────┼──────────────┼────────────────────────┤
-│  Auth       │  Master      │                        │
-│  Context    │  Context     │                        │
-│             │              │                        │
-│ · JWT 발급   │ · StylePreset│                        │
-│ · 소셜 로그인 │ · Layout     │                        │
-│             │ · Font       │                        │
-└─────────────┴──────────────┴────────────────────────┘
+`application.properties`는 `secret` profile을 include하지만 repository에는 `application-secret.properties`가 없습니다. Environment-specific 값의 실제 제공 방식은 실행 환경에서 준비해야 합니다.
+
+### Spring Boot 실행
+
+macOS/Linux:
+
+```bash
+./gradlew bootRun
 ```
 
-### 3.2 패키지 구조 (Hexagonal Architecture)
+Windows:
 
-```
-com.picturebook
-├── domain/                              ← 도메인 계층 (순수 비즈니스 로직, 외부 의존성 없음)
-│   ├── user/
-│   │   ├── entity/                      ← Aggregate Root, Entity, Value Object
-│   │   │   └── User.java
-│   │   ├── enums/
-│   │   │   └── SocialProvider.java
-│   │   └── repository/                  ← Repository 인터페이스 (Port)
-│   │       └── UserRepository.java
+```powershell
+.\gradlew.bat bootRun
 ```
 
-### 3.3 DDD 핵심 규칙
+현재 repository audit에서는 위 명령의 compile/runtime 성공 여부를 검증하지 않았습니다. PostgreSQL, Redis, MinIO 및 필요한 environment variable이 먼저 준비돼야 합니다.
 
-**Aggregate Root (AR)**
+### Build 및 Test
 
-| Aggregate | Root Entity | 하위 Entity / VO |
-|-----------|-------------|-------------------|
-| User | `User` | — |
-| Book | `Book` | `Page`, `Character`, `PageCharacter` |
-| AI Generation | 각 Log가 독립 | `TextRefinementLog`, `ImageGenerationLog`, `CoverGenerationLog` |
-| Auto Save | `AutoSaveSnapshot` | — |
+macOS/Linux:
 
-**규칙**
-
-1. 외부에서 Aggregate 내부 엔티티에 직접 접근하지 않는다. 반드시 AR을 통해 접근.
-2. Aggregate 간 참조는 ID로만 한다 (객체 참조 X).
-3. 하나의 트랜잭션에서 하나의 Aggregate만 수정한다.
-4. Aggregate 간 일관성은 도메인 이벤트로 처리한다.
-
-**도메인 이벤트 예시**
-
-```
-BookCreatedEvent        → 자동 저장 스냅샷 초기 생성
-PageTextRefinedEvent    → 정제 로그 기록
-ImageGeneratedEvent     → 생성 로그 기록
-BookPublishedEvent      → 공유 링크 토큰 생성
+```bash
+./gradlew bootJar
+./gradlew test
 ```
 
-### 3.4 엔티티 코딩 컨벤션
+Windows:
 
-```java
-// 1. @Entity에 @Table(name = "...") 명시
-// 2. PK 전략: UUID → uuid-ossp, SERIAL → IDENTITY
-// 3. 생성/수정 시각 → @CreatedDate / @LastModifiedDate (JPA Auditing)
-// 4. Enum → @Enumerated(EnumType.STRING)
-// 5. soft delete → @Where(clause = "is_active = true") 또는 @SQLRestriction
-// 6. 비즈니스 로직은 엔티티 안에 (Rich Domain Model)
-// 7. setter 금지 → 의미 있는 메서드명 사용 (changeStatus, updateProfile 등)
-// 8. 생성자 접근 제한 → @NoArgsConstructor(access = PROTECTED)
-// 9. 연관관계 편의 메서드는 AR 쪽에 위치
+```powershell
+.\gradlew.bat bootJar
+.\gradlew.bat test
 ```
 
----
+현재 `src/test`가 없으므로 automated test suite는 존재하지 않습니다. 최신 audit에서는 build와 test 명령도 실행하지 않았습니다.
 
-## 4. 공통 기술 가이드
+### Docker Compose
 
+Development Compose의 의도된 실행 명령은 다음과 같습니다.
 
-### 4.1 API 응답 형식
-성공응답
-```json
-{
-  "success": true,
-  "status" : 200,
-  "data": {
-    "id": "550e8400-...",
-    "title": "나의 그림책"
-  }
-}
+```bash
+docker compose -f docker-compose-dev.yml up --build
 ```
 
-실패응답
-```json
-{
-  "success": false,
-  "status" : 404,
-  "error": {
-    "code": "BOOK_NOT_FOUND",
-    "message": "해당 책을 찾을 수 없습니다."
-  }
-}
+그러나 `docker-compose-dev.yml`이 참조하는 `../picturebook-ai`와 monitoring configuration은 현재 workspace에 없습니다. 따라서 이 repository만으로 development stack의 완전한 실행을 보장할 수 없습니다.
+
+Host-oriented Compose의 구성상 실행 명령은 다음과 같습니다.
+
+```bash
+docker compose up -d --build
 ```
 
-### 4.2 테스트 전략
+이 구성은 별도의 `.env`, monitoring file, 외부 PostgreSQL·Redis·MinIO를 전제로 합니다. Production 또는 shared environment에서의 실제 실행·중단·재시작에는 대상 환경과 범위가 명시된 사람의 승인이 필요합니다.
 
-| 계층 | 테스트 종류 | 도구 |
-|------|-------------|------|
-| Domain | 단위 테스트 | JUnit 5, AssertJ |
-| Application | 통합 테스트 | @SpringBootTest, Mockito |
-| Infrastructure | 리포지토리 테스트 | @DataJpaTest, Testcontainers |
-| Presentation | API 테스트 | MockMvc, RestAssured |
+## 6. AI Agent 활용 방식
 
----
-# spring-server  
+이 프로젝트는 Codex를 주요 AI coding agent로 활용합니다. Agent는 source/configuration evidence를 우선하며, 확인되지 않은 내용은 `[INFERRED]` 또는 `[UNKNOWN]`으로 구분합니다.
+
+| 위치 | 역할 |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | 프로젝트 최상위 AI Agent 운영 규칙 |
+| [.agents/rules/](.agents/rules/) | Security, Database, AWS, AI 등 작업 영역별 필수 세부 규칙 |
+| [.agents/workflows/](.agents/workflows/) | 조사, 계획, 구현, 테스트, 리뷰, 배포 절차 |
+| [.agents/skills/](.agents/skills/) | Repository 조사, AWS, AI, image, Database migration, testing, security 전문 지침 |
+| [docs/](docs/) | 프로젝트 상태와 Architecture, API, Database, AWS, Security 지식 문서 |
+
+작업 전에는 [AGENTS.md](AGENTS.md)와 해당 작업에 관련된 `.agents/` 및 `docs/` 문서를 확인합니다. 상세 규칙은 README에 복제하지 않습니다.
+
+## 7. 프로젝트 개발 순서
+
+1. **완료 — Repository baseline 및 문서 정리**
+2. **예정 — 확인된 보안 문제와 기술 부채 처리**
+3. **예정 — AWS target architecture 설계 및 승인**
+4. **예정 — Database/Object Storage migration 전략 수립**
+5. **예정 — 승인된 방식으로 AWS infrastructure 구축**
+6. **예정 — 기존 서비스와 data를 AWS로 이전**
+7. **예정 — AWS 환경에서 기존 기능 검증**
+8. **예정 — AI 그림책 요구사항과 Architecture 설계**
+9. **예정 — AI 그림책 생성 backend/pipeline 구현**
+10. **예정 — 기존 Spring Backend와 AI 기능 연동**
+11. **예정 — Frontend 연동**
+12. **예정 — 통합 test 및 security 검증**
+13. **예정 — Production deployment 및 최종 검증**
+
+각 단계의 Architecture, provider, migration 및 infrastructure 기술은 승인된 결정이 생긴 뒤 관련 docs에 기록합니다.
+
+## 8. 프로젝트 문서
+
+- [PROJECT.md](docs/PROJECT.md): 제품 범위, runtime, source layout과 현재 개발 상태
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md): application, deployment, authentication, AI 및 storage Architecture
+- [DATABASE.md](docs/DATABASE.md): PostgreSQL/JPA mapping, relationship, constraint와 migration 현황
+- [API.md](docs/API.md): 구현된 endpoint 그룹, authentication boundary와 누락 API
+- [AWS.md](docs/AWS.md): 현재 AWS 부재 상태, 기존 deployment와 이전 전 미결정 사항
+- [SECURITY.md](docs/SECURITY.md): 인증, CORS, storage access와 확인된 security finding
+- [REPOSITORY_AUDIT.md](docs/REPOSITORY_AUDIT.md): 현재 repository 사실의 기준 baseline
+
+## 9. 보안
+
+- Secret, API Key, Password, Token, Credential의 실제 값을 repository에 commit하거나 문서와 log에 기록하지 않습니다.
+- Production 또는 shared environment의 deployment와 external state 변경은 명시적인 승인이 필요합니다.
+- 현재 확인된 security finding과 production release gate는 [Security 문서](docs/SECURITY.md)를 확인합니다.
+- AWS, Database, OAuth provider, production Secret 변경은 [AGENTS.md](AGENTS.md)의 승인 규칙을 따릅니다.

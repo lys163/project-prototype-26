@@ -15,6 +15,24 @@ External client / frontend (not in this repository)
 
 [CONFIRMED] application은 별도로 deploy 가능한 service가 아닌 package-oriented module을 사용합니다. 구현된 각 domain은 일반적으로 필요한 경우 controller, service, repository, entity, DTO package를 가집니다.
 
+## 현재 deployment topology
+
+```text
+GitHub Actions (main push, self-hosted runner)
+  -> host 고정 path의 .env / Compose / optional monitoring 복사
+  -> docker compose down
+  -> docker compose up -d --build
+
+Production Compose
+  -> Spring Boot application
+  -> Prometheus / Grafana
+  -> host 또는 external PostgreSQL / Redis / MinIO
+```
+
+[CONFIRMED] Production Compose는 `host.docker.internal` 또는 environment variable을 통해 Compose stack 외부의 PostgreSQL, Redis, MinIO에 접근합니다.
+
+[CONFIRMED] 현재 workflow에는 별도의 automated test, application health verification, production approval, rollback 단계가 없습니다.
+
 ## 주요 component
 
 [CONFIRMED]
@@ -28,6 +46,12 @@ External client / frontend (not in this repository)
 | MinIO | upload/download presigned URL을 생성하고 bucket을 initialize합니다. |
 | Spring Actuator / Prometheus registry | dependency와 Compose monitoring configuration이 존재합니다. |
 
+## Authentication 및 authorization boundary
+
+[CONFIRMED] Spring Security는 stateless OAuth2/JWT 구조이며 선택된 endpoint에 명시적으로 authentication을 요구합니다. 마지막 authorization rule은 `anyRequest().permitAll()`입니다.
+
+[CONFIRMED] `/api/reading-goals`, reading-progress 관련 endpoint, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다. 모든 authenticated user에는 `ROLE_USER`가 부여되며 다른 role 또는 method-level authorization은 발견되지 않았습니다.
+
 ## AI-generation 경계
 
 [CONFIRMED] `aigeneration`에는 `TextRefinementLog`, `ImageGenerationLog`, `CoverGenerationLog` entity가 포함됩니다. `Book`과 `Page`에도 AI-assisted content를 위한 field가 포함됩니다.
@@ -36,6 +60,8 @@ External client / frontend (not in this repository)
 
 [CONFIRMED] `docker-compose-dev.yml`은 Gemini API-key environment variable을 사용하는 `ai-server` service와 ChromaDB service를 정의합니다. Spring application code는 AI-server URL 또는 ChromaDB를 참조하지 않습니다.
 
+[CONFIRMED] Development Compose가 참조하는 `../picturebook-ai`와 Prometheus/Grafana monitoring configuration path는 조사한 workspace에 존재하지 않습니다.
+
 [UNKNOWN] 참조된 AI server의 source, API contract, deployment process, operational status는 이 repository에서 확인할 수 없습니다.
 
 ## Storage architecture
@@ -43,6 +69,16 @@ External client / frontend (not in this repository)
 [CONFIRMED] storage module은 `MinioStorageAdapter`로 구현된 `ObjectStoragePort`에 의존합니다. `StorageUseCase`는 `users/{userId}/` 아래에 object key를 생성하고 presigned upload URL을 반환합니다.
 
 [CONFIRMED] `MinioStorageService`는 구성된 bucket이 없으면 생성하고 application startup 시 public-read bucket policy를 설정합니다.
+
+[CONFIRMED] `ObjectStoragePort`/`MinioStorageAdapter`는 presigned PUT/GET 및 delete abstraction을 제공하고, 별도의 `StorageService`/`MinioStorageService`는 직접 upload/delete/public URL과 startup bucket initialization을 제공합니다. 현재 API는 `StorageUseCase`의 presigned upload flow를 사용합니다.
+
+## 현재 operational gap
+
+[CONFIRMED] 이 repository에는 automated test source가 없습니다.
+
+[CONFIRMED] Flyway, Liquibase, versioned migration directory/file은 없으며 default/development는 Hibernate `create`, production Compose는 `update`를 설정합니다.
+
+[UNKNOWN] AWS target architecture, AWS Service, IaC 도구는 아직 결정되지 않았습니다.
 
 ## Search architecture
 

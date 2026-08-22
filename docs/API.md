@@ -19,7 +19,8 @@
 | `/api/books` | Public list, personal list, detail, bestseller data, paid publication, reading progress, performance입니다. |
 | `/api/books/{bookId}/likes` | Like, unlike, like status입니다. |
 | `/api/books/{bookId}/reviews` 및 `/api/reviews` | Review list, personal list, create, update, delete입니다. |
-| `/api/categories`, `/api/banners`, `/api/ranking` | Category, banner, ranking 조회입니다. |
+| `/api/categories` | Category 생성 및 조회입니다. |
+| `/api/banners`, `/api/ranking` | Banner 및 ranking 조회입니다. |
 | `/api/reading-goals`, `/api/report` | Reading goal 및 report입니다. |
 | `/api/storage` | Presigned object-upload URL을 발급합니다. |
 
@@ -31,8 +32,26 @@
 
 [CONFIRMED] 마지막 authorization rule은 `anyRequest().permitAll()`이며, 앞선 rule과 일치하지 않는 endpoint는 public입니다.
 
+[CONFIRMED] `/api/reading-goals`, `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다. 일부 endpoint는 `@AuthenticationPrincipal`을 사용하지만 route level authentication은 permit-all default에 의존합니다.
+
+[CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
+
+[CONFIRMED] OAuth2 login 성공 시 access token은 frontend callback URL의 query parameter로 전달되고 refresh token은 HttpOnly, Secure, SameSite=Lax cookie로 전달됩니다.
+
+## Storage API 상태
+
+[CONFIRMED] `/api/storage/presigned-upload`는 authenticated user에게 MinIO presigned PUT URL을 발급합니다. Object-storage abstraction에는 presigned GET 기능이 있지만 이를 노출하는 download controller endpoint는 발견되지 않았습니다.
+
+[CONFIRMED] Upload request는 filename과 content type의 `@NotBlank`만 검증합니다. MIME allowlist, upload size, quota 검증은 발견되지 않았으며 request의 `contentType`은 presigned request 생성에 사용되지 않습니다.
+
 ## 누락된 API 영역
 
 [CONFIRMED] book, page, character, auto-save snapshot 생성 또는 편집, AI text refinement, AI image generation, cover generation, 일반 keyword search를 위한 endpoint는 발견되지 않았습니다.
 
 [CONFIRMED] `purchases` entity와 service/repository는 있지만 purchase controller endpoint는 발견되지 않았습니다.
+
+## 검증 상태
+
+[CONFIRMED] 이 repository에는 API contract test를 포함한 automated test source가 없습니다.
+
+[UNKNOWN] 최신 repository audit에서는 build, test, application runtime을 실행하지 않았으므로 API의 compile/runtime 동작은 검증되지 않았습니다.
