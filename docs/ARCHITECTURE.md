@@ -18,10 +18,14 @@ External client / frontend (not in this repository)
 ## 현재 deployment topology
 
 ```text
-GitHub Actions (main push, self-hosted runner)
-  -> host 고정 path의 .env / Compose / optional monitoring 복사
-  -> docker compose down
-  -> docker compose up -d --build
+GitHub Actions CI (main push / main 대상 Pull Request, ubuntu-latest)
+  -> Gradle Wrapper clean build / test
+  -> deployment 없음
+
+Legacy Build & Deploy (main push, self-hosted runner 필요)
+  -> 현재 등록 runner 없음: Queued
+  -> runner가 있다면 host 고정 path의 .env / Compose / optional monitoring 복사
+  -> docker compose down / docker compose up -d --build
 
 Production Compose
   -> Spring Boot application
@@ -31,7 +35,7 @@ Production Compose
 
 [CONFIRMED] Production Compose는 `host.docker.internal` 또는 environment variable을 통해 Compose stack 외부의 PostgreSQL, Redis, MinIO에 접근합니다.
 
-[CONFIRMED] 현재 workflow에는 별도의 automated test, application health verification, production approval, rollback 단계가 없습니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 GitHub-hosted runner에서 build/test만 수행하며 실제 `main` push 실행이 PASS했습니다. `.github/workflows/deploy.yml`은 application health verification, production approval, rollback 단계가 없는 legacy CD 설정이며 현재 등록된 self-hosted runner가 없어 실행되지 않습니다.
 
 ## 주요 component
 
@@ -74,7 +78,7 @@ Production Compose
 
 ## 현재 operational gap
 
-[CONFIRMED] 이 repository에는 automated test source가 없습니다.
+[CONFIRMED] 이 repository에는 4개 test class와 13개 automated test가 있으며 focused test, 전체 Gradle test, clean build가 PASS했습니다. 현재 test는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출의 최소 안전망이며 전체 API/runtime coverage는 아닙니다.
 
 [CONFIRMED] Flyway, Liquibase, versioned migration directory/file은 없으며 default/development는 Hibernate `create`, production Compose는 `update`를 설정합니다.
 

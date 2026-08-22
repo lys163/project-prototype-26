@@ -58,8 +58,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler{
             .build();
         response.addHeader("Set-Cookie", rtCookie.toString());
 
-        log.info("로그인 성공 - userId: {}, accessToken: {}, refreshToken: {}, rt쿠키 설정완", userId, accessToken, refreshToken);
-        log.info("isNewUser?: {}",isNewUser);
+        log.info("OAuth2 로그인 성공 - isNewUser: {}", isNewUser);
 
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl+"/oauth/callback")
             .queryParam("accessToken", accessToken)

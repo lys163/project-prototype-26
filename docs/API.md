@@ -52,6 +52,8 @@
 
 ## 검증 상태
 
-[CONFIRMED] 이 repository에는 API contract test를 포함한 automated test source가 없습니다.
+[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 13개 automated test가 있습니다. `/api/reading-goals`의 anonymous 접근 허용 상태도 characterization test로 확인되며 authorization gap은 아직 해결되지 않았습니다. 전체 API contract test coverage는 아직 없습니다.
 
-[UNKNOWN] 최신 repository audit에서는 build, test, application runtime을 실행하지 않았으므로 API의 compile/runtime 동작은 검증되지 않았습니다.
+[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-1 CI PASS이며, 이번 P0-2 변경은 아직 원격 CI 실행 전입니다.
+
+[UNKNOWN] Application runtime 및 external dependency를 포함한 API 통합 동작은 아직 검증되지 않았습니다.

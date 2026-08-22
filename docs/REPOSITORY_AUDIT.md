@@ -6,14 +6,16 @@
 | --- | --- |
 | Audit 날짜 | 2026-08-22 |
 | Branch | `main` |
-| Source 기준 commit | `d6918d6` |
-| Working tree | 재조사 시작 시 clean |
+| 최초 audit source 기준 commit | `d6918d6` |
+| 최초 audit working tree | 재조사 시작 시 clean |
+| P0-1 source 기준 commit | `1b56e47` |
+| P0-1 상태 갱신 | 2026-08-22, 최소 test/CI 안전망 검증 결과 반영 |
 
 [CONFIRMED] 이 audit에서는 현재 checkout에서 사용할 수 있는 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration을 조사했습니다.
 
-[CONFIRMED] audit 중 application code, dependency, infrastructure resource, database, Docker container, external service, secret value는 변경하지 않았습니다.
+[CONFIRMED] 최초 audit 중에는 application code, dependency, infrastructure resource, database, Docker container, external service, secret value를 변경하지 않았습니다. 이후 승인된 P0-1에서 test dependency, test source와 독립 CI workflow가 추가됐으며 application behavior와 external environment는 변경하지 않았습니다.
 
-[CONFIRMED] Build, test, application runtime, Docker Compose 실행은 수행하지 않았습니다. 따라서 현재 source의 compile 성공 여부, test 결과, application 기동 여부, external dependency 연결 상태는 검증되지 않았습니다.
+[CONFIRMED] P0-1에서 focused test, 전체 Gradle test, clean build를 실행해 PASS했으며 GitHub Actions의 실제 `main` push CI도 PASS했습니다. Application runtime, Docker Compose, external dependency 연결 상태는 검증되지 않았습니다.
 
 ## 확인된 상태
 
@@ -22,17 +24,17 @@
 1. 이 repository는 Java 21 / Spring Boot 4 backend-only repository입니다.
 2. PostgreSQL, Redis, MinIO, OAuth2, JWT, Swagger, Actuator, Prometheus dependency/configuration이 존재합니다.
 3. Social login, token refresh/logout, browsing, author activity, reader feature, social interaction, reporting, storage presigned upload URL이 API level에서 구현되어 있습니다.
-4. frontend source, test source, migration tooling, AWS IaC, AWS resource configuration은 없습니다.
+4. frontend source, migration tooling, AWS IaC, AWS resource configuration은 없습니다.
 5. 이 repository에는 search implementation이 없습니다.
 6. AI-generation entity는 있지만 AI server 또는 model provider를 호출하는 implementation은 없습니다.
 7. Development Compose는 조사한 workspace에 없는 AI-server path를 참조합니다.
-8. Production Compose와 CI/CD는 기존 host-oriented self-hosted runner deployment에 결합되어 있습니다.
+8. GitHub-hosted runner 기반 build/test CI와 legacy host-oriented self-hosted CD workflow가 분리되어 있습니다. 현재 self-hosted runner가 없어 legacy workflow는 실행되지 않습니다.
 9. 사용자는 현재 AWS infrastructure가 없음을 확인했습니다.
 10. `src/main/java/com/picturebook` 아래에는 145개 Java main source, 13개 controller, 17개 service, 12개 repository, 20개 JPA entity가 있습니다.
 
 ## 현재 구현 완료 영역
 
-[CONFIRMED] 다음 항목은 source/API level에서 구현되어 있습니다. Build와 runtime 동작은 이번 audit에서 검증하지 않았습니다.
+[CONFIRMED] 다음 항목은 source/API level에서 구현되어 있습니다. Gradle test와 clean build는 검증됐지만 application runtime은 검증하지 않았습니다.
 
 - Kakao/Naver OAuth2 social login
 - JWT bearer access token 생성 및 검증
@@ -50,6 +52,9 @@
 - MinIO 직접 upload/delete와 object-storage abstraction
 - Swagger/OpenAPI, Actuator, Prometheus dependency/configuration
 - MDC 및 AOP logging
+- `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 13개 automated test
+- OAuth2 login 성공 log의 access token/refresh token 실제 값 출력 제거와 기존 Redis/cookie/redirect 계약 검증
+- GitHub-hosted runner에서 build/test만 수행하는 독립 CI workflow
 
 ## 현재 미구현 영역
 
@@ -63,7 +68,6 @@
 - Auto-save controller, service, repository
 - Purchase 생성·결제 API
 - Font, LayoutTemplate, StylePreset 관리 API
-- Automated test source
 - Versioned database migration
 - AWS infrastructure, IaC, SDK 및 AWS deployment
 - Repository 내부의 완전한 monitoring configuration
@@ -118,7 +122,7 @@
 - `SecurityConfig`의 마지막 rule은 `anyRequest().permitAll()`입니다.
 - `/api/reading-goals`, `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다.
 - 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 또는 method-level authorization은 발견되지 않았습니다.
-- 일부 service는 user ID 또는 resource ownership을 검사하지만, 전체 endpoint에 대한 authorization test는 존재하지 않습니다.
+- 일부 service는 user ID 또는 resource ownership을 검사합니다. `BookService`와 `ReviewService`의 대표 ownership unit test 및 `SecurityConfig` matcher characterization test는 존재하지만, 전체 endpoint에 대한 authorization test는 존재하지 않습니다.
 
 [INFERRED] Authentication principal을 사용하는 endpoint가 permit-all default에 남아 있으므로 production 전에 전체 route의 authentication, role 및 object-level authorization 검토가 필요합니다.
 
@@ -129,7 +133,7 @@
 - Development Compose에는 OAuth, JWT, database, MinIO 및 관리 service와 관련된 plaintext credential/secret material이 포함되어 있습니다. 실제 value는 이 문서에 기록하지 않습니다.
 - Default application configuration은 OAuth/JWT/admin secret의 일부를 environment variable로 참조합니다.
 - Production Compose는 주요 credential을 environment variable로 참조합니다.
-- GitHub Actions는 self-hosted runner host의 `.env`를 workflow workspace로 복사합니다.
+- Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 repository에 등록된 self-hosted runner는 없습니다.
 - Discord webhook은 GitHub Actions secret reference를 통해 전달됩니다.
 - AWS managed-secret integration 또는 다른 production secret-management implementation은 없습니다.
 
@@ -145,19 +149,19 @@
 - Production Compose는 application, Prometheus, Grafana만 정의하며 PostgreSQL, Redis, MinIO가 Compose stack 외부의 host 또는 external environment에 이미 존재한다고 가정합니다.
 - Production Compose는 `host.docker.internal` 및 environment variable을 통해 외부 PostgreSQL, Redis, MinIO에 연결합니다.
 - Production Compose가 mount하는 monitoring configuration은 repository에 없습니다.
-- `.github/workflows/deploy.yml`은 `main` push 시 self-hosted runner에서 실행됩니다.
-- Workflow는 host의 고정 path에서 `.env`, `docker-compose.yml`, 선택적으로 monitoring directory를 복사한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행합니다.
-- Workflow에는 별도의 automated test, application health verification, deployment approval, rollback 단계가 없습니다.
-- Deployment 결과는 Discord webhook을 통해 알립니다.
+- `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 `./gradlew clean build --no-daemon`을 실행합니다. Secret 주입과 deployment step은 없으며 실제 `main` push 실행이 PASS했습니다.
+- `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 등록된 self-hosted runner가 없어 Queued 상태가 되며 deployment는 실행되지 않습니다.
+- Legacy workflow는 runner가 있을 경우 host의 고정 path에서 `.env`, `docker-compose.yml`, 선택적으로 monitoring directory를 복사한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행하도록 구성되어 있습니다.
+- Legacy workflow에는 application health verification, deployment approval, rollback 단계가 없으며 결과를 Discord webhook으로 알리도록 구성되어 있습니다.
 
-[INFERRED] 현재 CI/CD는 특정 host layout과 사전 구성된 external service에 결합되어 있어 AWS 이전 전에 재설계 또는 명시적인 migration이 필요합니다.
+[INFERRED] Build/test CI는 host deployment와 분리됐지만 legacy CD는 특정 host layout과 사전 구성된 external service에 결합되어 있어 AWS 이전 전에 재설계 또는 명시적인 migration이 필요합니다.
 
 ## 확인된 operational gap
 
 | Gap | Evidence |
 | --- | --- |
-| Test 부재 | `src/test` directory 또는 test source file이 없습니다. |
-| Build/runtime 미검증 | 이번 audit에서 Gradle build, test, application, Compose를 실행하지 않았습니다. |
+| Test coverage 제한 | 4개 test class와 13개 automated test는 최소 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
+| Runtime 미검증 | Gradle test와 clean build는 PASS했지만 application과 Compose는 실행하지 않았습니다. |
 | Versioned database migration 부재 | Flyway/Liquibase dependency 또는 migration file이 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
 | Search implementation 부재 | API/service/query/indexing integration이 없습니다. |
@@ -165,7 +169,7 @@
 | Auto-save 실행 부재 | `AutoSaveSnapshot` entity만 있고 controller/service/repository가 없습니다. |
 | Purchase 생성 API 부재 | Purchase entity/service/repository는 있지만 purchase 생성 controller/API가 없습니다. |
 | repository의 Compose input 불완전 | 참조된 monitoring path와 AI-server path가 없습니다. |
-| CI/CD safety gate 부재 | Test, health verification, approval, rollback 단계가 없습니다. |
+| CD safety gate 부재 | 독립 CI의 build/test는 PASS했지만 legacy CD에는 health verification, approval, rollback 단계가 없습니다. |
 | AWS definition 부재 | AWS code, configuration, IaC가 없습니다. |
 
 ## code/configuration에서 기록한 risk
@@ -173,7 +177,6 @@
 [CONFIRMED]
 
 - Development Compose에는 plaintext secret material이 포함되어 있으며, value는 여기에서 반복하지 않습니다.
-- 성공한 OAuth2 login은 access token과 refresh token을 logging합니다.
 - OAuth2 success redirect URL은 access token을 query parameter로 전달합니다.
 - MinIO startup logic은 구성된 bucket에 public read를 부여합니다.
 - Storage upload에는 MIME allowlist, file size 및 quota 검증이 없습니다.
@@ -189,13 +192,13 @@
 
 [INFERRED] 안전한 database 이전에는 versioned migration approach와 명시적인 data export/import 및 verification plan이 필요합니다.
 
-[INFERRED] Production release 전에는 token logging과 access-token 전달 방식, endpoint authorization, plaintext secret, object-storage 공개 범위 및 upload 제한을 해결하거나 승인된 security decision으로 기록해야 합니다.
+[INFERRED] Production release 전에는 access-token 전달 방식, endpoint authorization, plaintext secret, object-storage 공개 범위 및 upload 제한을 해결하거나 승인된 security decision으로 기록해야 합니다.
 
 ## AWS 이전 전 해결 또는 결정 필요 사항
 
 [INFERRED]
 
-- Secret/token logging 제거 및 노출 가능 credential의 rotation 필요 여부 확인
+- 노출 가능 credential의 rotation 필요 여부 확인
 - 전체 endpoint authentication, role 및 object-level authorization 검토
 - MinIO public-read와 generated/user-uploaded asset의 공개 범위 결정
 - Presigned upload의 MIME, file size, quota 및 lifecycle policy 결정
@@ -204,7 +207,7 @@
 - 기존 Redis refresh token cutover plan
 - 기존 MinIO object inventory, migration, URL compatibility 및 rollback plan
 - Host 고정 path와 `host.docker.internal` 의존 제거
-- CI/CD build/test, health verification, approval 및 rollback 절차
+- 독립 build/test CI 유지와 CD health verification, approval 및 rollback 절차
 - OAuth redirect URL, CORS, Domain/DNS/certificate migration plan
 - Monitoring, logging, alerting, backup, recovery objective 및 cost-control requirement
 
@@ -233,12 +236,12 @@
 
 - frontend repository의 location 및 status
 - AI-server repository의 location, API contract, status
-- 현재 application compile/test/runtime status
+- 현재 application runtime status
 - 현재 production server 및 Docker container status
 - 현재 host database schema/data, Redis data, MinIO object data, backup, volume, credential rotation status
 - AWS account/region/budget/access model 및 target operational requirement
 - Domain/DNS/certificate ownership 및 OAuth provider-console access
 - Production traffic, storage size, database size, recovery objective, monitoring/alerting requirement
-- GitHub self-hosted runner의 permission, host security 및 workspace cleanup 상태
+- Legacy self-hosted runner host의 security 및 과거 workspace cleanup 상태
 - Production TLS termination, WAF, network control, log retention/access control, incident-response process
 - Dependency vulnerability status

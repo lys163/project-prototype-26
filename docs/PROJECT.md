@@ -2,9 +2,9 @@
 
 ## Baseline
 
-[CONFIRMED] 이 문서는 `docs/REPOSITORY_AUDIT.md`의 2026-08-22, `main`, source 기준 commit `d6918d6` audit baseline을 따릅니다.
+[CONFIRMED] 이 문서는 `docs/REPOSITORY_AUDIT.md`의 2026-08-22, `main`, P0-1 source 기준 commit `1b56e47` audit baseline을 따릅니다.
 
-[CONFIRMED] 해당 audit에서는 build, test, application runtime, Docker Compose를 실행하지 않았으므로 compile 및 runtime 상태는 검증되지 않았습니다.
+[CONFIRMED] P0-1에서 focused test, 전체 Gradle test, clean build를 실행해 PASS했으며 GitHub Actions CI의 실제 실행도 PASS했습니다. Application runtime과 Docker Compose 실행은 아직 검증되지 않았습니다.
 
 ## 범위
 
@@ -41,7 +41,7 @@
 
 [CONFIRMED] Production Compose는 application, Prometheus, Grafana를 정의하고 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 이미 존재한다고 가정합니다.
 
-[CONFIRMED] 현재 CI/CD는 `main` push 시 self-hosted GitHub Actions runner에서 host의 고정 path에 있는 `.env`, Compose file, 선택적 monitoring directory를 복사하고 `docker compose down`과 `docker compose up -d --build`를 실행합니다. 별도의 automated test, health verification, production approval, rollback 단계는 없습니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle clean build/test를 수행하며 deployment는 실행하지 않습니다. 실제 `main` push CI 실행은 PASS했습니다. 기존 `.github/workflows/deploy.yml`은 host의 고정 path와 self-hosted runner를 전제로 하는 legacy CD 설정으로 남아 있으며, 현재 등록된 self-hosted runner가 없어 trigger 후 Queued 상태가 됩니다. Legacy workflow에는 application health verification, production approval, rollback 단계가 없습니다.
 
 [UNKNOWN] 누락된 AI-server 및 monitoring path가 repository 외부에서 제공될 수 있으므로, 이 repository만으로 현재 완전하게 동작하는 local startup procedure를 확정할 수 없습니다.
 
@@ -64,10 +64,12 @@ src/main/java/com/picturebook/
 
 [CONFIRMED] Redis는 현재 OAuth2 login의 refresh token을 user별 key로 저장·조회·삭제하는 데 사용됩니다. Cache, queue, session 또는 distributed lock 용도는 발견되지 않았습니다.
 
-[CONFIRMED] 이 repository에는 AWS infrastructure, AWS IaC, versioned database migration tool/file, automated test source가 없습니다.
+[CONFIRMED] 이 repository에는 AWS infrastructure, AWS IaC, versioned database migration tool/file이 없습니다.
 
 ## Test 상태
 
-[CONFIRMED] 이 repository에는 `src/test` directory 및 test source file이 없습니다.
+[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 13개 automated test가 있습니다.
 
-[UNKNOWN] 현재 compile, test, runtime status는 repository audit의 일부로 실행되지 않았습니다.
+[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-1 `main` push CI PASS이며, 이번 P0-2 변경은 아직 원격 CI 실행 전입니다.
+
+[UNKNOWN] Application runtime과 external dependency가 필요한 통합 동작은 아직 검증되지 않았습니다.

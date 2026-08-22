@@ -8,13 +8,15 @@
 
 ## 기존 deployment evidence
 
-[CONFIRMED] `.github/workflows/deploy.yml`은 self-hosted GitHub Actions runner를 사용하여 `main`에 push될 때 deploy합니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle build/test만 수행하며 production deployment는 실행하지 않습니다. 실제 `main` push CI 실행은 PASS했습니다.
+
+[CONFIRMED] `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 repository에 등록된 self-hosted runner가 없어 해당 workflow는 Queued 상태가 되며 deployment는 실행되지 않습니다.
 
 [CONFIRMED] 해당 workflow는 runner host의 고정 path에서 `.env`, `docker-compose.yml`, 선택적으로 `monitoring`을 복사한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행합니다.
 
-[CONFIRMED] 해당 workflow에는 별도의 automated test, application health verification, production approval, rollback 단계가 없습니다.
+[CONFIRMED] Legacy workflow에는 application health verification, production approval, rollback 단계가 없습니다. Build/test 검증은 별도 `ci.yml`에서 수행되며 CD와 연결되어 있지 않습니다.
 
-[UNKNOWN] Self-hosted runner workspace에 복사된 `.env`의 cleanup 및 접근 통제 상태는 repository에서 확인할 수 없습니다.
+[UNKNOWN] Legacy self-hosted runner host에서 과거 workspace에 복사됐을 수 있는 `.env`의 cleanup 및 접근 통제 상태는 repository에서 확인할 수 없습니다.
 
 [CONFIRMED] Production Compose는 PostgreSQL, Redis, MinIO가 Compose service 외부에 이미 존재한다고 가정합니다. `host.docker.internal` 또는 environment variable을 사용하여 host-local service에 접근합니다.
 

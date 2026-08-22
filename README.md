@@ -16,7 +16,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 
 ### 구현 완료
 
-다음 항목은 source/API level에서 확인됐습니다. 현재 compile 및 runtime 동작은 최신 audit에서 실행 검증되지 않았습니다.
+다음 항목은 source/API level에서 확인됐습니다. Gradle test와 clean build는 실행 검증됐지만 application runtime은 아직 검증되지 않았습니다.
 
 - Kakao/Naver OAuth2 social login
 - JWT access token과 Redis refresh token 기반 인증
@@ -36,7 +36,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 - AI story/text/image/cover generation 실행 flow
 - AI provider client, asynchronous worker 및 generation orchestration
 - Keyword Search 및 별도 search engine integration
-- Automated test source와 API contract test
+- 전체 API contract 및 integration test coverage 확대
 - Versioned Database migration
 - AWS target architecture 설계와 infrastructure 구축
 - 기존 PostgreSQL·Redis·MinIO의 migration 및 cutover
@@ -55,11 +55,11 @@ AI provider/model, Queue, Vector Database, Database migration 도구, AWS Servic
 | Authentication | Spring Security, OAuth2 Client, Kakao/Naver, JWT |
 | API 문서 | SpringDoc OpenAPI, Swagger UI |
 | Container | Docker, Docker Compose |
-| CI/CD | GitHub Actions, self-hosted runner, host-oriented Compose deployment |
+| CI/CD | GitHub-hosted `ubuntu-latest`에서 build/test를 수행하는 CI. 별도의 legacy self-hosted Compose deployment workflow는 runner 부재로 실행되지 않음 |
 | Monitoring | Spring Actuator, Prometheus registry, Prometheus/Grafana Compose 정의. Repository 내부 monitoring file은 누락됨 |
 | AI | AI-generation entity와 development Compose reference만 존재. 실행 integration은 미구현 |
 | AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
-| Test | JUnit Platform과 일부 test dependency는 구성됐으나 `src/test` 없음 |
+| Test | JUnit Platform, Web MVC/Security test support, 4개 test class와 13개 automated test |
 | Database migration | Versioned migration 도구와 migration file 없음 |
 
 ## 4. Architecture 개요
@@ -75,7 +75,7 @@ Frontend / External Client (이 repository에 없음)
        -> ObjectStoragePort / MinIO SDK -> MinIO
 ```
 
-현재 deployment는 `main` push 시 self-hosted GitHub Actions runner가 host의 configuration을 사용해 Docker Compose stack을 재기동하는 구조입니다. Production Compose는 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 존재한다고 가정합니다.
+현재 `main` push와 `main` 대상 Pull Request에서는 GitHub-hosted `ubuntu-latest` runner가 Gradle build/test CI를 수행하며 deployment는 실행하지 않습니다. 기존 `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted Compose deployment 설정이지만, 현재 등록된 self-hosted runner가 없어 Queued 상태가 됩니다. Production Compose는 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 존재한다고 가정합니다.
 
 AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 결정되지 않았습니다. 현재 구조와 향후 AWS target을 동일한 Architecture로 취급하지 않습니다.
 
@@ -118,7 +118,7 @@ Windows:
 .\gradlew.bat bootRun
 ```
 
-현재 repository audit에서는 위 명령의 compile/runtime 성공 여부를 검증하지 않았습니다. PostgreSQL, Redis, MinIO 및 필요한 environment variable이 먼저 준비돼야 합니다.
+Gradle clean build는 검증됐지만 위 `bootRun` 명령과 application runtime은 검증하지 않았습니다. PostgreSQL, Redis, MinIO 및 필요한 environment variable이 먼저 준비돼야 합니다.
 
 ### Build 및 Test
 
@@ -136,7 +136,7 @@ Windows:
 .\gradlew.bat test
 ```
 
-현재 `src/test`가 없으므로 automated test suite는 존재하지 않습니다. 최신 audit에서는 build와 test 명령도 실행하지 않았습니다.
+현재 `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 검증하는 4개 test class와 13개 automated test가 있습니다. 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions CI의 마지막 확인 결과는 P0-1 `main` push PASS이며, 이번 P0-2 변경은 아직 원격 CI 실행 전입니다. 이 최소 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
 
 ### Docker Compose
 
