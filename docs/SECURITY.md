@@ -31,9 +31,9 @@
 
 [CONFIRMED] `POST /api/categories`는 `SecurityConfig`의 명시적인 authenticated matcher에 포함되어 있지 않습니다.
 
-[CONFIRMED] `/api/reading-goals`, `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`도 명시적인 authenticated matcher에 포함되어 있지 않습니다. 해당 controller는 `@AuthenticationPrincipal`을 사용하지만 route는 `anyRequest().permitAll()` default에 남아 있습니다.
+[CONFIRMED] `GET /api/reading-goals`와 `PUT /api/reading-goals`는 HTTP method와 구체적인 path 기준으로 authentication을 요구합니다. `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`는 여전히 명시적인 authenticated matcher에 포함되어 있지 않습니다. 해당 controller는 `@AuthenticationPrincipal`을 사용하지만 route는 `anyRequest().permitAll()` default에 남아 있습니다.
 
-[CONFIRMED] P0-1 `SecurityConfig` characterization test는 `/api/reading-goals`가 현재 anonymous request를 허용하는 상태를 확인합니다. 이 test는 현재 behavior를 기록하는 최소 안전망이며 authorization gap을 해결하지 않습니다.
+[CONFIRMED] `SecurityConfig` characterization test는 `/api/reading-goals`의 anonymous GET/PUT이 `401`이고 authenticated GET/PUT이 Security를 통과하며 anonymous `GET /api/books`가 계속 허용되는 것을 검증합니다.
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 

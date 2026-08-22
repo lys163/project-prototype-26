@@ -99,6 +99,14 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/api/reading-goals"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/reading-goals"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/user/*/profile"
                         ).permitAll()
                         .requestMatchers(

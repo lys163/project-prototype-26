@@ -74,8 +74,26 @@ class SecurityConfigCharacterizationTest {
     }
 
     @Test
-    void readingGoalCurrentlyAllowsAnonymousRequests() throws Exception {
+    void readingGoalGetRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/reading-goals"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readingGoalPutRejectsAnonymousRequests() throws Exception {
         mockMvc.perform(put("/api/reading-goals"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readingGoalGetAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/api/reading-goals").with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void readingGoalPutAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(put("/api/reading-goals").with(user("user").roles("USER")))
                 .andExpect(status().isNoContent());
     }
 }
@@ -98,8 +116,13 @@ class SecurityCharacterizationEndpoints {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/api/reading-goals")
+    ResponseEntity<Void> getReadingGoal() {
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/api/reading-goals")
-    ResponseEntity<Void> readingGoal() {
+    ResponseEntity<Void> putReadingGoal() {
         return ResponseEntity.noContent().build();
     }
 }

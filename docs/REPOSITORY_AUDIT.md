@@ -10,6 +10,8 @@
 | 최초 audit working tree | 재조사 시작 시 clean |
 | P0-1 source 기준 commit | `1b56e47` |
 | P0-1 상태 갱신 | 2026-08-22, 최소 test/CI 안전망 검증 결과 반영 |
+| P0-2 OAuth logging source 기준 commit | `bc1bfd8` |
+| P0-2 OAuth logging CI | `main` push PASS 확인 |
 
 [CONFIRMED] 이 audit에서는 현재 checkout에서 사용할 수 있는 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration을 조사했습니다.
 
@@ -52,8 +54,9 @@
 - MinIO 직접 upload/delete와 object-storage abstraction
 - Swagger/OpenAPI, Actuator, Prometheus dependency/configuration
 - MDC 및 AOP logging
-- `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 13개 automated test
+- `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 16개 automated test
 - OAuth2 login 성공 log의 access token/refresh token 실제 값 출력 제거와 기존 Redis/cookie/redirect 계약 검증
+- `GET /api/reading-goals`와 `PUT /api/reading-goals`의 method-specific authentication 및 PUBLIC book endpoint 회귀 검증
 - GitHub-hosted runner에서 build/test만 수행하는 독립 CI workflow
 
 ## 현재 미구현 영역
@@ -120,7 +123,8 @@
 - Refresh token은 Redis에 저장되고 HttpOnly, Secure, SameSite=Lax cookie로 전달됩니다.
 - 선택된 user, storage, report, review, like, follow, paid-publication endpoint는 `SecurityConfig`에서 명시적으로 authentication을 요구합니다.
 - `SecurityConfig`의 마지막 rule은 `anyRequest().permitAll()`입니다.
-- `/api/reading-goals`, `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다.
+- `GET /api/reading-goals`와 `PUT /api/reading-goals`는 명시적인 authenticated matcher에 포함됩니다.
+- `/api/books/{bookId}/reading-progress`, `/api/books/{bookId}/reading-progress/complete`, `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다.
 - 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 또는 method-level authorization은 발견되지 않았습니다.
 - 일부 service는 user ID 또는 resource ownership을 검사합니다. `BookService`와 `ReviewService`의 대표 ownership unit test 및 `SecurityConfig` matcher characterization test는 존재하지만, 전체 endpoint에 대한 authorization test는 존재하지 않습니다.
 
@@ -160,7 +164,7 @@
 
 | Gap | Evidence |
 | --- | --- |
-| Test coverage 제한 | 4개 test class와 13개 automated test는 최소 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
+| Test coverage 제한 | 4개 test class와 16개 automated test는 최소 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
 | Runtime 미검증 | Gradle test와 clean build는 PASS했지만 application과 Compose는 실행하지 않았습니다. |
 | Versioned database migration 부재 | Flyway/Liquibase dependency 또는 migration file이 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
