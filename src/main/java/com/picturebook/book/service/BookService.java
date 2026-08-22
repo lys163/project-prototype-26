@@ -351,6 +351,13 @@ public class BookService {
     @Transactional(readOnly = true)
     public BookYearlySalesResponse getBookMonthlySales(UUID userId, UUID bookId, Integer year) {
 
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOOK_NOT_FOUND));
+
+        if (!book.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.BOOK_SALES_FORBIDDEN);
+        }
+
         if (year == null) {
             year = LocalDate.now().getYear();
         }

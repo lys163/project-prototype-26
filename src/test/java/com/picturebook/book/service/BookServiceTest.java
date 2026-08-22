@@ -2,8 +2,13 @@ package com.picturebook.book.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -81,6 +86,55 @@ class BookServiceTest {
         );
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    void ownerReceivesTwelveZeroMonthsWhenBookHasNoSales() {
+        UUID ownerId = UUID.randomUUID();
+        UUID bookId = UUID.randomUUID();
+        int year = 2026;
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(completedBook(ownerId)));
+        when(purchaseRepository.findMonthlySalesCount(
+                eq(ownerId), eq(bookId), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        var response = bookService.getBookMonthlySales(ownerId, bookId, year);
+
+        assertThat(response.bookId()).isEqualTo(bookId);
+        assertThat(response.year()).isEqualTo(year);
+        assertThat(response.monthlySales())
+                .hasSize(12)
+                .allSatisfy(monthlySales -> assertThat(monthlySales.salesCount()).isZero());
+    }
+
+    @Test
+    void anotherUserCannotViewBookMonthlySales() {
+        UUID ownerId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+        UUID bookId = UUID.randomUUID();
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(completedBook(ownerId)));
+
+        CustomException exception = catchThrowableOfType(
+                () -> bookService.getBookMonthlySales(requesterId, bookId, 2026),
+                CustomException.class
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BOOK_SALES_FORBIDDEN);
+        verifyNoInteractions(purchaseRepository);
+    }
+
+    @Test
+    void missingBookMonthlySalesReturnsBookNotFound() {
+        UUID bookId = UUID.randomUUID();
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+
+        CustomException exception = catchThrowableOfType(
+                () -> bookService.getBookMonthlySales(UUID.randomUUID(), bookId, 2026),
+                CustomException.class
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+        verifyNoInteractions(purchaseRepository);
     }
 
     private Book completedBook(UUID ownerId) {

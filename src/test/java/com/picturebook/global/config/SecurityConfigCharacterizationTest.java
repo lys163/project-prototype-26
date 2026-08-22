@@ -67,6 +67,19 @@ class SecurityConfigCharacterizationTest {
     }
 
     @Test
+    void bookMonthlySalesRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/books/{bookId}/sales/monthly", BOOK_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void bookMonthlySalesAllowsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/api/books/{bookId}/sales/monthly", BOOK_ID)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     void myBookListRejectsAnonymousRequests() throws Exception {
         mockMvc.perform(get("/api/books/me"))
                 .andExpect(status().isUnauthorized());
@@ -188,6 +201,11 @@ class SecurityCharacterizationEndpoints {
 
     @GetMapping("/api/books/{bookId}")
     ResponseEntity<Void> publicBookDetail() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/books/{bookId}/sales/monthly")
+    ResponseEntity<Void> bookMonthlySales() {
         return ResponseEntity.noContent().build();
     }
 

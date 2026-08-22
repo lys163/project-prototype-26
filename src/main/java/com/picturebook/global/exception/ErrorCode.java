@@ -24,6 +24,7 @@ public enum ErrorCode {
     PAGE_BAD_REQUEST(400, "BOOK_002", "요청 페이지가 유효 범위를 벗어났습니다."),
     BOOK_FORBIDDEN(403, "BOOK_003", "본인의 도서만 출판할 수 있습니다."),
     BOOK_NOT_COMPLETED(400, "BOOK_004", "완성된 도서만 유료 출판할 수 있습니다."),
+    BOOK_SALES_FORBIDDEN(403, "BOOK_005", "해당 도서의 판매량을 조회할 권한이 없습니다."),
 
     // REVIEW
     ALREADY_REVIEWED(409, "REVIEW_001", "이미 해당 도서에 리뷰를 작성하였습니다."),

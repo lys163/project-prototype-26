@@ -87,6 +87,10 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/api/books/*/sales/monthly"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/books/*/reading-progress"
                         ).authenticated()
                         .requestMatchers(

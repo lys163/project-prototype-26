@@ -32,7 +32,9 @@
 
 [CONFIRMED] 마지막 authorization rule은 `anyRequest().permitAll()`이며, 앞선 rule과 일치하지 않는 endpoint는 public입니다.
 
-[CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST와 Profile/Profile Image PATCH는 명시적인 authenticated matcher에 포함됩니다. `GET /api/books/{bookId}/sales/monthly`, `POST /api/categories`는 여전히 명시적인 authenticated matcher에 포함되지 않습니다. 해당 endpoint는 route level에서 permit-all default에 남아 있습니다.
+[CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST, Profile/Profile Image PATCH와 Monthly Sales GET은 명시적인 authenticated matcher에 포함됩니다. `POST /api/categories`는 여전히 명시적인 authenticated matcher에 포함되지 않아 route level에서 permit-all default에 남아 있습니다.
+
+[CONFIRMED] `GET /api/books/{bookId}/sales/monthly`는 현재 사용자가 소유한 Book만 조회할 수 있습니다. 본인 Book에 판매가 없으면 HTTP 200과 1~12월 판매량 0을 반환하고, 다른 사용자 소유 Book은 `BOOK_SALES_FORBIDDEN`으로 HTTP 403, 존재하지 않는 Book은 `BOOK_NOT_FOUND`로 HTTP 404를 반환하도록 구현되어 있습니다.
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 
@@ -52,8 +54,8 @@
 
 ## 검증 상태
 
-[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 28개 automated test가 있습니다. Characterization test는 Reading Goal, Reading Progress와 Profile 수정 endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다. 전체 API contract test coverage는 아직 없습니다.
+[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 33개 automated test가 있습니다. Characterization test는 Reading Goal, Reading Progress, Profile 수정과 Monthly Sales endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다. Monthly Sales Service test는 본인 Book의 판매 없음, 다른 사용자 소유 Book, 존재하지 않는 Book 정책을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
 
-[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization CI PASS이며, 이번 Profile authorization 변경은 아직 원격 CI 실행 전입니다.
+[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization CI PASS이며, 이번 Monthly Sales authorization 변경은 아직 원격 CI 실행 전입니다. Monthly Sales의 403/404는 Service ErrorCode와 기존 `GlobalExceptionHandler` mapping으로 검증되며 실제 `BookController` HTTP contract를 직접 실행하는 MVC test는 없습니다.
 
 [UNKNOWN] Application runtime 및 external dependency를 포함한 API 통합 동작은 아직 검증되지 않았습니다.
