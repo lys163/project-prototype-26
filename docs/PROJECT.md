@@ -68,8 +68,8 @@ src/main/java/com/picturebook/
 
 ## Test 상태
 
-[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 33개 automated test가 있습니다.
+[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 36개 automated test가 있습니다.
 
-[CONFIRMED] 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization `main` push CI PASS이며, 이번 Monthly Sales authorization 변경은 아직 원격 CI 실행 전입니다.
+[CONFIRMED] 현재 checkout의 Category Security focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization `main` push CI PASS이며, 현재 working-tree 변경은 아직 원격 CI 실행 전입니다.
 
 [UNKNOWN] Application runtime과 external dependency가 필요한 통합 동작은 아직 검증되지 않았습니다.

@@ -29,11 +29,13 @@
 
 [CONFIRMED] `SecurityConfig`는 `anyRequest().permitAll()`로 끝납니다. Authorization은 각 protected route가 해당 rule 앞에 명시적으로 나열되는지에 달려 있습니다.
 
-[CONFIRMED] `POST /api/categories`는 `SecurityConfig`의 명시적인 authenticated matcher에 포함되어 있지 않습니다.
+[CONFIRMED] `POST /api/categories`는 HTTP method와 exact path 기준의 `denyAll` matcher로 User Server의 anonymous 및 authenticated `ROLE_USER` 요청을 모두 차단합니다. Characterization test에서 각각 401과 403을 확인했습니다. `GET /api/categories`는 PUBLIC으로 유지됩니다.
+
+[CONFIRMED] Category 생성 code는 삭제하지 않았으며 Category 관리 기능은 향후 별도 관리자 서버로 이전할 예정입니다. [UNKNOWN] 초기 Category master data 공급 방식은 아직 결정되지 않았습니다.
 
 [CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST, Profile/Profile Image PATCH와 Monthly Sales GET은 HTTP method와 구체적인 path pattern 기준으로 authentication을 요구합니다. Monthly Sales Service는 Book 존재 여부를 먼저 확인하고 현재 사용자와 Book owner가 다르면 전용 403 ErrorCode로 거부합니다.
 
-[CONFIRMED] `SecurityConfig` characterization test는 Reading Goal, Reading Progress, Profile 수정과 Monthly Sales endpoint의 anonymous 차단 및 authenticated 통과를 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다.
+[CONFIRMED] `SecurityConfig` characterization test는 Reading Goal, Reading Progress, Profile 수정과 Monthly Sales endpoint의 authentication, Category POST 비활성화 및 PUBLIC Category GET을 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다.
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 

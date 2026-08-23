@@ -59,7 +59,7 @@ AI provider/model, Queue, Vector Database, Database migration 도구, AWS Servic
 | Monitoring | Spring Actuator, Prometheus registry, Prometheus/Grafana Compose 정의. Repository 내부 monitoring file은 누락됨 |
 | AI | AI-generation entity와 development Compose reference만 존재. 실행 integration은 미구현 |
 | AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
-| Test | JUnit Platform, Web MVC/Security test support, 4개 test class와 33개 automated test |
+| Test | JUnit Platform, Web MVC/Security test support, 4개 test class와 36개 automated test |
 | Database migration | Versioned migration 도구와 migration file 없음 |
 
 ## 4. Architecture 개요
@@ -136,7 +136,7 @@ Windows:
 .\gradlew.bat test
 ```
 
-현재 `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 검증하는 4개 test class와 33개 automated test가 있습니다. 현재 checkout의 focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions CI의 마지막 확인 결과는 P0-2 Reading Progress authorization 변경 `main` push PASS이며, 이번 Monthly Sales authorization 변경은 아직 원격 CI 실행 전입니다. 이 최소 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
+현재 `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 검증하는 4개 test class와 36개 automated test가 있습니다. 현재 checkout의 Category Security focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions CI의 마지막 확인 결과는 P0-2 Reading Progress authorization 변경 `main` push PASS이며, 현재 working-tree 변경은 아직 원격 CI 실행 전입니다. 이 최소 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
 
 ### Docker Compose
 

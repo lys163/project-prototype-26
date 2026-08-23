@@ -189,6 +189,24 @@ class SecurityConfigCharacterizationTest {
         mockMvc.perform(get("/api/user/{userId}/profile", USER_ID))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void categoryCreationRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(post("/api/categories"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void categoryCreationRejectsAuthenticatedUserRequests() throws Exception {
+        mockMvc.perform(post("/api/categories").with(user("user").roles("USER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void categoryListAllowsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/api/categories"))
+                .andExpect(status().isNoContent());
+    }
 }
 
 @RestController
@@ -256,6 +274,16 @@ class SecurityCharacterizationEndpoints {
 
     @GetMapping("/api/user/{userId}/profile")
     ResponseEntity<Void> publicUserProfile() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/categories")
+    ResponseEntity<Void> createCategory() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/categories")
+    ResponseEntity<Void> getCategories() {
         return ResponseEntity.noContent().build();
     }
 }

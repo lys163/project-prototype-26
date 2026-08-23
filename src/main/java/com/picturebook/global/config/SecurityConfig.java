@@ -134,6 +134,10 @@ public class SecurityConfig {
                                 "/api/user/*/profile"
                         ).permitAll()
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/categories"
+                        ).denyAll()
+                        .requestMatchers(
                                 "/login/**",
                                 "/oauth2/**",
                                 "/api/auth/refresh"

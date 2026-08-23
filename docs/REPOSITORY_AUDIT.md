@@ -18,6 +18,7 @@
 | P0-2 Reading Progress CI | `main` push PASS 확인 |
 | P0-2 Profile authorization source 기준 commit | `f903d13` |
 | P0-2 Monthly Sales authorization local 검증 | 현재 working tree의 focused test, 전체 test, clean build PASS |
+| P0-2 Category POST 비활성화 local 검증 | 2026-08-23, 현재 working tree의 focused test, 전체 test, clean build PASS |
 
 [CONFIRMED] 이 audit에서는 현재 checkout에서 사용할 수 있는 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration을 조사했습니다.
 
@@ -54,18 +55,19 @@
 - Review 생성·조회·수정·삭제
 - Like, follow/unfollow 및 상태 조회
 - Report 생성과 사용자별 report 조회
-- Category 생성·조회, banner 조회
+- PUBLIC Category 조회, User Server에서 비활성화된 Category 생성 code, banner 조회
 - 월간·주간 author/book ranking
 - MinIO presigned upload URL 발급
 - MinIO 직접 upload/delete와 object-storage abstraction
 - Swagger/OpenAPI, Actuator, Prometheus dependency/configuration
 - MDC 및 AOP logging
-- `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 33개 automated test
+- `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 36개 automated test
 - OAuth2 login 성공 log의 access token/refresh token 실제 값 출력 제거와 기존 Redis/cookie/redirect 계약 검증
 - `GET /api/reading-goals`와 `PUT /api/reading-goals`의 method-specific authentication 및 PUBLIC book endpoint 회귀 검증
 - Reading Progress GET/PUT/complete POST의 method-specific authentication 및 PUBLIC book 목록·상세 회귀 검증
 - Profile/Profile Image PATCH의 method-specific authentication 및 PUBLIC user profile 조회 회귀 검증
 - Monthly Sales GET의 method-specific authentication, Book ownership 정책 및 PUBLIC book 목록·상세 회귀 검증
+- Category POST의 exact-path `denyAll`과 PUBLIC Category GET 회귀 검증
 - GitHub-hosted runner에서 build/test만 수행하는 독립 CI workflow
 
 ## 현재 미구현 영역
@@ -136,7 +138,8 @@
 - Reading Progress GET/PUT/complete POST는 명시적인 authenticated matcher에 포함됩니다.
 - `PATCH /api/user/profile`과 `PATCH /api/user/profile-image`는 명시적인 authenticated matcher에 포함됩니다.
 - `GET /api/books/{bookId}/sales/monthly`는 명시적인 authenticated matcher에 포함되며 Service에서 Book 존재 여부와 ownership을 검사합니다. 본인 Book에 판매가 없으면 12개월 판매량 0, 다른 사용자 소유 Book은 403, 존재하지 않는 Book은 404로 처리합니다.
-- `POST /api/categories`는 명시적인 authenticated matcher에 포함되지 않습니다.
+- `POST /api/categories`는 HTTP method와 exact path 기준의 `denyAll` matcher에 포함되어 anonymous 요청은 401, authenticated `ROLE_USER` 요청은 403으로 차단됩니다. `GET /api/categories`는 PUBLIC입니다.
+- Category 생성 code는 User Server에 남아 있으며 Category 관리 기능은 향후 별도 관리자 서버로 이전할 예정입니다.
 - 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 또는 method-level authorization은 발견되지 않았습니다.
 - 일부 service는 user ID 또는 resource ownership을 검사합니다. `BookService`와 `ReviewService`의 대표 ownership unit test 및 `SecurityConfig` matcher characterization test는 존재하지만, 전체 endpoint에 대한 authorization test는 존재하지 않습니다.
 
@@ -176,7 +179,7 @@
 
 | Gap | Evidence |
 | --- | --- |
-| Test coverage 제한 | 4개 test class와 33개 automated test는 최소 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
+| Test coverage 제한 | 4개 test class와 36개 automated test는 최소 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
 | Runtime 미검증 | Gradle test와 clean build는 PASS했지만 application과 Compose는 실행하지 않았습니다. |
 | Versioned database migration 부재 | Flyway/Liquibase dependency 또는 migration file이 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
@@ -197,7 +200,6 @@
 - MinIO startup logic은 구성된 bucket에 public read를 부여합니다.
 - Storage upload에는 MIME allowlist, file size 및 quota 검증이 없습니다.
 - security configuration은 일치하는 규칙이 없는 request를 기본적으로 public access로 설정합니다.
-- `POST /api/categories`가 명시적인 authenticated matcher에 없습니다.
 - Production schema management는 Hibernate `update`로 구성되어 있고, default/development setting은 `create`를 사용합니다.
 - GitHub Actions deployment는 host `.env`를 workspace로 복사하고 service를 먼저 중단한 뒤 재기동합니다.
 - 일부 Compose image는 immutable version/digest 대신 `latest` tag를 사용합니다.
@@ -259,5 +261,6 @@
 - Domain/DNS/certificate ownership 및 OAuth provider-console access
 - Production traffic, storage size, database size, recovery objective, monitoring/alerting requirement
 - Legacy self-hosted runner host의 security 및 과거 workspace cleanup 상태
+- Category 초기 master data 공급 방식
 - Production TLS termination, WAF, network control, log retention/access control, incident-response process
 - Dependency vulnerability status
