@@ -52,6 +52,13 @@
 6. behavior, API, database schema, security posture, operating procedure, deployment requirement가 변경되면 documentation을 갱신합니다.
 7. final report에서 변경된 file, 수행한 validation, risk, follow-up requirement를 명시합니다.
 
+### Cross-Repository Contract
+
+- Backend 변경이 Frontend가 소비하는 외부 contract에 영향을 주거나 영향을 줄 가능성이 있을 때만 `C:\workspc\codex\front`의 실제 consumer source/config를 확인합니다. 내부 repository query, service/transaction/JPA 구현 세부, helper, contract를 유지하는 test refactor에는 Frontend 조사가 필요하지 않습니다.
+- 확인 대상은 변경 contract의 실제 caller와 Zod schema, auth utility/OAuth callback, upload utility 등으로 제한하며, Frontend 전체 audit이나 docs만으로 consumer 동작을 추정하지 않습니다.
+- endpoint path/method, request/response DTO 및 `ApiResponse`/`PageResponse`, error/status, public/authenticated 정책, OAuth/token/refresh-cookie/CORS/frontend URL, presigned upload/object key/public URL, 향후 AI-generation client contract 변경은 cross-repository contract로 취급합니다.
+- Backend 작업에서 Frontend 변경 필요성을 발견해도 사용자 요청 또는 계획에 Frontend 변경이 포함되지 않으면 임의로 수정하지 않고 영향과 필요한 후속 작업만 보고합니다. 명시적인 Frontend/Backend 동시 변경에서는 양 repository의 Git 상태와 contract를 먼저 조사하고, 변경·검증 계획과 결과를 repository별로 분리해 보고하며 한쪽 성공만으로 전체 PASS로 보고하지 않습니다.
+
 ## 6. Documentation 규칙
 
 - `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/API.md`, `docs/AWS.md`, `docs/SECURITY.md`, `docs/REPOSITORY_AUDIT.md`를 현재 repository-audit baseline으로 취급합니다.

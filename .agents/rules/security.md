@@ -17,3 +17,4 @@
 4. public-read object storage를 새 asset의 기본값이 아닌 design/security 결정으로 취급합니다.
 5. authentication 변경 시 OAuth redirect, CORS, JWT behavior, cookie attribute, Redis refresh-token behavior를 함께 검토합니다.
 6. token logging과 commit된 secret material을 sensitive value를 반복하지 않고 finding으로 보고합니다.
+7. Frontend가 소비하는 OAuth redirect/callback, token 전달, refresh/cookie, Bearer 인증, CORS/credentials/frontend URL 또는 endpoint authorization contract를 변경할 때는 실제 Frontend auth flow와 config를 선택적으로 함께 조사합니다. Backend 내부 security 구현 세부만 변경되고 외부 contract가 유지되면 Frontend 조사는 필요하지 않습니다.

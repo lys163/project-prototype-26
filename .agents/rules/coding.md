@@ -15,3 +15,4 @@
 4. 모든 endpoint에 authorization intent를 명시하고 route를 추가할 때 `SecurityConfig`를 검사합니다.
 5. 사용자 승인 없이 dependency, framework, HTTP client, queue, external provider integration을 추가하지 않습니다.
 6. 변경된 endpoint contract는 `docs/API.md`에 문서화합니다.
+7. Frontend-visible API contract(path/method, request/response DTO, `ApiResponse`/`PageResponse`, error/status)를 변경할 때는 실제 Frontend caller와 Zod schema를 확인합니다. presigned upload/object key/public URL 또는 향후 AI-generation client contract도 같은 기준을 적용하며, storage 변경에서는 presigned 조건과 Frontend upload header 계약을 양쪽 source에서 확인합니다.
