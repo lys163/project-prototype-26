@@ -40,28 +40,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      ai-server:
-        condition: service_started
+      # ai-server:
+      #   condition: service_started
       minio:
         condition: service_started
 
-  ai-server:
-    build: ../picturebook-ai
-    ports:
-      - "8000:8000"
-    environment:
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      CHROMA_HOST: chromadb
-      CHROMA_PORT: 8100
-    depends_on:
-      - chromadb
+  # ai-server:
+  #   build: ../picturebook-ai
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     GEMINI_API_KEY: ${GEMINI_API_KEY}
+  #     CHROMA_HOST: chromadb
+  #     CHROMA_PORT: 8100
+  #   depends_on:
+  #     - chromadb
 
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8100:8000"
-    volumes:
-      - chromadb-data:/chroma/chroma
+  # chromadb:
+  #   image: chromadb/chroma:latest
+  #   ports:
+  #     - "8100:8000"
+  #   volumes:
+  #     - chromadb-data:/chroma/chroma
 
   redis:
     image: redis:7-alpine
@@ -96,33 +96,33 @@ services:
       timeout: 3s
       retries: 5
 
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    depends_on:
-      - app
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus-data:/prometheus
+  #   depends_on:
+  #     - app
 
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-    depends_on:
-      - prometheus
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: admin
+  #     GF_SECURITY_ADMIN_PASSWORD: admin
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+  #   depends_on:
+  #     - prometheus
 
 volumes:
   app-logs:
   pgdata:
-  prometheus-data:
-  grafana-data:
-  chromadb-data:
+  # prometheus-data:
+  # grafana-data:
+  # chromadb-data:
   minio-data:
