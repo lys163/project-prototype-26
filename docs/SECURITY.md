@@ -23,9 +23,9 @@
 
 [CONFIRMED] `docker-compose-dev.yml`에는 local development 관련 service 및 OAuth/JWT 관련 configuration을 위한 commit된 plaintext credential/secret이 포함되어 있습니다. Secret value는 이 document에 의도적으로 재현하지 않습니다.
 
-[CONFIRMED] `OAuth2SuccessHandler`의 login 성공 log에서 access token과 refresh token 실제 값 출력은 제거됐습니다. Focused test는 token 값이 log에 포함되지 않으며 기존 Redis 저장, refresh-token cookie, frontend redirect와 `isNewUser` 전달이 유지되는 것을 검증합니다.
+[CONFIRMED] `OAuth2SuccessHandler`의 login 성공 log에는 token 실제 값이 포함되지 않습니다. Focused test는 refresh token 값이 log에 포함되지 않으며 기존 Redis 저장, refresh-token cookie와 `isNewUser` redirect가 유지되고 access token이 redirect에 포함되거나 OAuth success 단계에서 생성되지 않는 것을 검증합니다.
 
-[CONFIRMED] OAuth2 success handler는 access token을 frontend callback URL의 query parameter로 전달합니다.
+[CONFIRMED] OAuth2 success handler는 access token을 생성하거나 frontend callback URL에 전달하지 않습니다. Frontend는 callback에서 refresh endpoint를 호출해 access token을 획득합니다.
 
 [CONFIRMED] `SecurityConfig`는 `anyRequest().permitAll()`로 끝납니다. Authorization은 각 protected route가 해당 rule 앞에 명시적으로 나열되는지에 달려 있습니다.
 

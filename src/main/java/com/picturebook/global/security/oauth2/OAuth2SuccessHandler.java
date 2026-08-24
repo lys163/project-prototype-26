@@ -42,7 +42,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler{
         UUID userId = userDetails.getUser().getId();
         boolean isNewUser = userDetails.isNewUser();
 
-        String accessToken = jwtProvider.createAccessToken(userId);
         String refreshToken = jwtProvider.createRefreshToken(userId);
 
         // rt redis 저장
@@ -61,7 +60,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler{
         log.info("OAuth2 로그인 성공 - isNewUser: {}", isNewUser);
 
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl+"/oauth/callback")
-            .queryParam("accessToken", accessToken)
             .queryParam("isNewUser", isNewUser)
             .build().toUriString();
 

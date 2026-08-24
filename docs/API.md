@@ -40,7 +40,7 @@
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 
-[CONFIRMED] OAuth2 login 성공 시 access token은 frontend callback URL의 query parameter로 전달되고 refresh token은 HttpOnly, Secure, SameSite=Lax cookie로 전달됩니다.
+[CONFIRMED] OAuth2 login 성공 시 refresh token은 HttpOnly, Secure, SameSite=Lax cookie로 전달되고 callback URL에는 `isNewUser`만 포함됩니다. Frontend는 callback에서 `POST /api/auth/refresh`를 호출해 access token을 응답으로 획득합니다.
 
 ## Storage API 상태
 
