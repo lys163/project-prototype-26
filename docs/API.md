@@ -44,9 +44,11 @@
 
 ## Storage API 상태
 
-[CONFIRMED] `/api/storage/presigned-upload`는 authenticated user에게 MinIO presigned PUT URL을 발급합니다. Object-storage abstraction에는 presigned GET 기능이 있지만 이를 노출하는 download controller endpoint는 발견되지 않았습니다.
+[CONFIRMED] `POST /api/storage/presigned-upload`는 authenticated user에게 MinIO presigned POST form을 발급합니다. Request는 `filename`, `contentType`, `fileSize`를 받고 response는 `objectKey`, `uploadUrl`, signed `fields`, `publicUrl`, `expiresInSeconds`를 반환합니다. Frontend는 fields를 그대로 `multipart/form-data`에 넣은 뒤 `file` field를 추가해 MinIO로 POST합니다. Object-storage abstraction에는 presigned GET 기능이 있지만 이를 노출하는 download controller endpoint는 없습니다.
 
-[CONFIRMED] Upload request는 filename과 content type의 `@NotBlank`만 검증합니다. MIME allowlist, upload size, quota 검증은 발견되지 않았으며 request의 `contentType`은 presigned request 생성에 사용되지 않습니다.
+[CONFIRMED] Upload는 `image/jpeg`, `image/png`, `image/webp`만 허용하고 1 byte 이상 5 MiB 이하로 제한합니다. Backend의 `fileSize` 검사는 조기 거부용이며 MinIO POST policy의 exact key, exact Content-Type, `content-length-range`가 actual upload를 검증합니다. Object key는 `users/{currentUserId}/{UUID}.{canonicalExtension}`이고 policy 만료는 600초입니다.
+
+[CONFIRMED] Profile update는 기존 DB의 OAuth external image URL을 그대로 유지하거나 현재 사용자의 configured Storage namespace URL로 교체하는 경우만 허용합니다. 신규 arbitrary external URL과 다른 사용자 namespace URL은 거부합니다.
 
 ## 누락된 API 영역
 

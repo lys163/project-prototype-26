@@ -116,13 +116,14 @@
 
 [CONFIRMED]
 
-- `ObjectStoragePort`와 `MinioStorageAdapter`는 presigned PUT/GET URL 및 object delete abstraction을 제공합니다.
-- `StorageUseCase`는 `users/{userId}/` namespace 아래에 object key를 생성하고 authenticated API를 통해 presigned upload URL을 발급합니다.
+- `ObjectStoragePort`와 `MinioStorageAdapter`는 provider-neutral signed POST form, public object URL, presigned GET URL 및 object delete abstraction을 제공합니다.
+- `StorageUseCase`는 `users/{userId}/` namespace 아래에 UUID와 MIME 기반 canonical extension의 object key를 생성하고 authenticated API를 통해 600초 presigned POST form을 발급합니다.
 - `MinioStorageService`는 application startup 시 bucket 존재 여부를 확인하고, 없으면 생성한 뒤 bucket 전체에 public-read policy를 적용합니다.
-- API로 노출된 storage endpoint는 presigned upload URL 발급입니다. Presigned download API endpoint는 발견되지 않았습니다.
-- Upload request는 filename과 content type이 비어 있지 않은지만 검증합니다. MIME allowlist, file size, quota 검증은 발견되지 않았으며 request의 `contentType`은 presigned request 생성에 사용되지 않습니다.
+- API로 노출된 storage endpoint는 presigned POST form 발급입니다. Presigned download API endpoint는 발견되지 않았습니다.
+- Upload는 JPEG/PNG/WebP와 1 byte~5 MiB를 허용합니다. MinIO POST policy는 exact key, exact Content-Type, `content-length-range`를 적용하며 Backend의 declared `fileSize` 검사는 조기 거부에 사용됩니다.
+- Profile update는 기존 OAuth external image URL의 동일 값 유지 또는 current-user Storage URL로의 교체만 허용합니다.
 
-[INFERRED] Bucket 전체 public-read와 제한이 충분하지 않은 upload 정책은 user-generated/private content를 production에서 처리하기 전에 security 및 product 검토가 필요합니다.
+[CONFIRMED] Profile 및 향후 AI image는 public asset이라는 제품 정책에 따라 bucket 전체 anonymous `GetObject`를 유지합니다. Quota/rate limit과 cleanup lifecycle은 후속 AI/운영 설계 범위입니다.
 
 ## Authentication 및 Authorization 구조
 
@@ -198,8 +199,8 @@
 
 - Development Compose에는 plaintext secret material이 포함되어 있으며, value는 여기에서 반복하지 않습니다.
 - OAuth2 success redirect URL은 access token을 query parameter로 전달합니다.
-- MinIO startup logic은 구성된 bucket에 public read를 부여합니다.
-- Storage upload에는 MIME allowlist, file size 및 quota 검증이 없습니다.
+- MinIO startup logic은 확정된 public image 정책에 따라 구성된 bucket에 public read를 부여합니다.
+- Storage quota/rate limit 및 old/failed/orphan object cleanup은 아직 없습니다.
 - security configuration은 일치하는 규칙이 없는 request를 `denyAll`로 차단합니다.
 - Production schema management는 Hibernate `update`로 구성되어 있고, default/development setting은 `create`를 사용합니다.
 - GitHub Actions deployment는 host `.env`를 workspace로 복사하고 service를 먼저 중단한 뒤 재기동합니다.
@@ -219,8 +220,8 @@
 
 - 노출 가능 credential의 rotation 필요 여부 확인
 - 전체 endpoint authentication, role 및 object-level authorization 검토
-- MinIO public-read와 generated/user-uploaded asset의 공개 범위 결정
-- Presigned upload의 MIME, file size, quota 및 lifecycle policy 결정
+- AI generation의 quota/rate limit 및 storage usage 정책 결정
+- Profile/AI image의 old/failed/orphan object cleanup lifecycle 결정
 - Production에서 Hibernate `create/update` 의존을 제거하기 위한 versioned migration approach 결정
 - 기존 PostgreSQL export/import, backup, rollback 및 data verification plan
 - 기존 Redis refresh token cutover plan

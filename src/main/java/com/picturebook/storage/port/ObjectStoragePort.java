@@ -11,13 +11,17 @@ import java.time.Duration;
 public interface ObjectStoragePort {
 
     /**
-     * 클라이언트가 PUT 요청으로 파일을 직접 업로드할 수 있는 프리사인드 URL 발급
-     *
-     * @param objectKey 버킷 내 오브젝트 키 (예: "users/{uuid}/profile.png")
-     * @param expiry    URL 유효 기간
-     * @return 프리사인드 업로드 URL
+     * 클라이언트가 multipart/form-data POST로 직접 업로드할 수 있는 서명된 form 계약을 발급합니다.
      */
-    String presignedUploadUrl(String objectKey, Duration expiry);
+    PresignedPost presignedUploadPost(
+            String objectKey,
+            String contentType,
+            long minSize,
+            long maxSize,
+            Duration expiry
+    );
+
+    String publicObjectUrl(String objectKey);
 
     /**
      * 클라이언트가 GET 요청으로 파일을 다운로드할 수 있는 프리사인드 URL 발급

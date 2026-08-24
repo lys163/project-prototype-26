@@ -14,6 +14,7 @@ public enum ErrorCode {
     // USER
     USER_NOT_FOUND(404, "USER_001", "사용자를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(409, "USER_002", "이미 존재하는 이메일입니다."),
+    INVALID_PROFILE_IMAGE(400, "USER_003", "유효하지 않은 프로필 이미지입니다."),
 
     // Report
     ALREADY_REPORTED(409, "REPORT_001", "이미 해당 도서에 대한 신고 기록이 존재합니다."),
@@ -44,6 +45,8 @@ public enum ErrorCode {
 
     // INVALID
     INVALID_INPUT_VALUE(400, "INVALID_INPUT", "잘못된 입력 값입니다."),
+    UNSUPPORTED_IMAGE_TYPE(400, "STORAGE_001", "지원하지 않는 이미지 형식입니다."),
+    INVALID_IMAGE_SIZE(400, "STORAGE_002", "이미지 크기는 1 byte 이상 5 MiB 이하여야 합니다."),
 
     // Category
     CATEGORY_ALREADY_EXISTS(409, "CATEGORY_001", "이미 존재하는 카테고리입니다.");

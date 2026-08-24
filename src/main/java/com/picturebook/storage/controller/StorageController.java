@@ -30,14 +30,14 @@ public class StorageController {
     private final StorageUseCase storageUseCase;
 
     @Operation(
-            summary = "업로드용 프리사인드 URL 발급",
-            description = "클라이언트는 반환된 URL로 PUT 요청을 보내 파일을 업로드한다. 인증 필수."
+            summary = "업로드용 프리사인드 POST form 발급",
+            description = "클라이언트는 반환된 uploadUrl과 fields로 multipart/form-data POST를 전송한다. 인증 필수."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "프리사인드 URL 발급 성공",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "프리사인드 POST form 발급 성공",
                     content = @Content(schema = @Schema(implementation = PresignedUrlResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 (filename/contentType 누락)")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 또는 지원하지 않는 MIME/파일 크기")
     })
     @PostMapping("/presigned-upload")
     public ResponseEntity<ApiResponse<PresignedUrlResponse>> presignedUpload(

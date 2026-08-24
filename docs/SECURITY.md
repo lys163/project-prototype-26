@@ -17,7 +17,7 @@
 
 ## Storage access
 
-[CONFIRMED] storage module은 time-limited presigned upload URL을 발급합니다. MinIO initialization service는 구성된 bucket에 public-read policy를 적용합니다.
+[CONFIRMED] storage module은 authenticated user에게 600초 presigned POST form을 발급합니다. MinIO initialization service는 확정된 public image 정책에 따라 구성된 bucket에 anonymous `GetObject` public-read policy를 적용합니다.
 
 ## 확인된 security finding
 
@@ -39,7 +39,11 @@
 
 [CONFIRMED] 모든 authenticated user에는 `ROLE_USER`가 부여됩니다. 다른 role 및 method-level authorization은 발견되지 않았습니다.
 
-[CONFIRMED] Presigned upload request에는 filename과 content type의 `@NotBlank` validation만 있습니다. MIME allowlist, upload size, quota 검증은 발견되지 않았고 request의 `contentType`은 presigned request 생성에 사용되지 않습니다.
+[CONFIRMED] Presigned upload는 JPEG/PNG/WebP exact MIME allowlist, 1 byte~5 MiB policy, current-user object namespace를 적용합니다. MinIO POST policy가 exact key와 Content-Type 및 `content-length-range`를 서명하므로 client가 선언한 `fileSize`와 다른 oversized body를 보내도 Storage가 거부할 수 있는 구조입니다.
+
+[CONFIRMED] 새 profile image는 현재 사용자의 configured Storage URL만 허용합니다. 기존 OAuth provider external image URL은 DB 값과 완전히 동일하게 유지하는 경우에만 허용합니다. null/blank profile image의 기존 허용 동작은 유지합니다.
+
+[CONFIRMED] 사용자 quota/rate limit과 old/failed/orphan image cleanup은 이 Storage 변경에 포함되지 않았습니다.
 
 [CONFIRMED] Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 등록된 self-hosted runner가 없어 workflow는 Queued 상태가 됩니다. 새 `.github/workflows/ci.yml`은 GitHub-hosted runner에서 Secret 주입 없이 build/test만 수행합니다. Repository에는 AWS managed-secret integration 또는 다른 production secret-management implementation이 없습니다.
 

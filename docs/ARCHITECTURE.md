@@ -70,11 +70,11 @@ Production Compose
 
 ## Storage architecture
 
-[CONFIRMED] storage module은 `MinioStorageAdapter`로 구현된 `ObjectStoragePort`에 의존합니다. `StorageUseCase`는 `users/{userId}/` 아래에 object key를 생성하고 presigned upload URL을 반환합니다.
+[CONFIRMED] storage module은 `MinioStorageAdapter`로 구현된 `ObjectStoragePort`에 의존합니다. `StorageUseCase`는 `users/{userId}/` 아래에 MIME 기반 canonical extension과 UUID object key를 생성하고 provider-neutral presigned POST form을 반환합니다.
 
 [CONFIRMED] `MinioStorageService`는 구성된 bucket이 없으면 생성하고 application startup 시 public-read bucket policy를 설정합니다.
 
-[CONFIRMED] `ObjectStoragePort`/`MinioStorageAdapter`는 presigned PUT/GET 및 delete abstraction을 제공하고, 별도의 `StorageService`/`MinioStorageService`는 직접 upload/delete/public URL과 startup bucket initialization을 제공합니다. 현재 API는 `StorageUseCase`의 presigned upload flow를 사용합니다.
+[CONFIRMED] `ObjectStoragePort`/`MinioStorageAdapter`는 signed POST form, public object URL, presigned GET 및 delete abstraction을 제공하고, 별도의 `StorageService`/`MinioStorageService`는 직접 upload/delete/public URL과 startup bucket initialization을 제공합니다. 현재 API는 POST policy의 key, Content-Type, 1 byte~5 MiB size range를 이용한 browser direct upload flow를 사용합니다.
 
 ## 현재 operational gap
 

@@ -39,6 +39,7 @@ import com.picturebook.global.exception.ErrorCode;
 import com.picturebook.global.security.oauth2.OAuth2Response;
 import com.picturebook.purchase.service.PurchaseService;
 import com.picturebook.review.service.ReviewService;
+import com.picturebook.storage.service.PublicImageUrlPolicy;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,7 @@ public class UserService {
     private final ReadingProgressService readingProgressService;
     private final UserReadingGoalService userReadingGoalService;
     private final AuthorFollowService authorFollowService;
+    private final PublicImageUrlPolicy publicImageUrlPolicy;
 
     @Transactional
     public UserLoginContext getOrRegisterUser(OAuth2Response response){
@@ -98,7 +100,7 @@ public class UserService {
     @Transactional
     public UserResponseDto updateProfileImage(UUID userId, String imageUrl){
         User user = findById(userId);
-
+        validateProfileImage(user, imageUrl);
         user.updateProfileImage(imageUrl);
 
         return UserResponseDto.from(user);
@@ -117,9 +119,22 @@ public class UserService {
             }
         }
 
+        validateProfileImage(user, request.profileImage());
         user.updateProfile(request.nickname(), request.email(),request.profileImage());
 
         return UserResponseDto.from(user);
+    }
+
+    private void validateProfileImage(User user, String requestedImageUrl) {
+        if (requestedImageUrl == null || requestedImageUrl.isBlank()) {
+            return;
+        }
+        if (Objects.equals(user.getProfileImage(), requestedImageUrl)) {
+            return;
+        }
+        if (!publicImageUrlPolicy.isCurrentUserImageUrl(requestedImageUrl, user.getId())) {
+            throw new CustomException(ErrorCode.INVALID_PROFILE_IMAGE);
+        }
     }
 
 
