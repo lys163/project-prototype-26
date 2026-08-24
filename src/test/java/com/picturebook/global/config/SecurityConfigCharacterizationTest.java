@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -207,6 +209,44 @@ class SecurityConfigCharacterizationTest {
         mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isNoContent());
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/api/banners",
+            "/api/books",
+            "/api/books/bestsellers",
+            "/api/books/bestsellers/highlights",
+            "/api/books/11111111-1111-1111-1111-111111111101",
+            "/api/books/11111111-1111-1111-1111-111111111101/likes",
+            "/api/books/11111111-1111-1111-1111-111111111101/reviews",
+            "/api/categories",
+            "/api/authors/22222222-2222-2222-2222-222222222202/follow",
+            "/api/authors/22222222-2222-2222-2222-222222222202/stats",
+            "/api/authors/22222222-2222-2222-2222-222222222202/books",
+            "/api/ranking/monthly/prolific-authors",
+            "/api/ranking/monthly/popular-authors",
+            "/api/ranking/monthly/popular-books",
+            "/api/ranking/weekly/prolific-authors",
+            "/api/ranking/weekly/popular-authors",
+            "/api/ranking/weekly/popular-books"
+    })
+    void explicitPublicEndpointsAllowAnonymousRequests(String path) throws Exception {
+        mockMvc.perform(get(path))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void unmatchedEndpointRejectsAnonymousRequests() throws Exception {
+        mockMvc.perform(get("/security-characterization/unmatched"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void unmatchedEndpointRejectsAuthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/security-characterization/unmatched")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isForbidden());
+    }
 }
 
 @RestController
@@ -284,6 +324,31 @@ class SecurityCharacterizationEndpoints {
 
     @GetMapping("/api/categories")
     ResponseEntity<Void> getCategories() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping({
+            "/api/banners",
+            "/api/books/bestsellers",
+            "/api/books/bestsellers/highlights",
+            "/api/books/{bookId}/likes",
+            "/api/books/{bookId}/reviews",
+            "/api/authors/{authorId}/follow",
+            "/api/authors/{authorId}/stats",
+            "/api/authors/{authorId}/books",
+            "/api/ranking/monthly/prolific-authors",
+            "/api/ranking/monthly/popular-authors",
+            "/api/ranking/monthly/popular-books",
+            "/api/ranking/weekly/prolific-authors",
+            "/api/ranking/weekly/popular-authors",
+            "/api/ranking/weekly/popular-books"
+    })
+    ResponseEntity<Void> explicitPublicEndpoints() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/security-characterization/unmatched")
+    ResponseEntity<Void> unmatchedEndpoint() {
         return ResponseEntity.noContent().build();
     }
 }

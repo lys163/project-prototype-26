@@ -30,7 +30,7 @@
 
 [CONFIRMED] OAuth2 login과 `/api/auth/refresh`는 configuration에 따라 public입니다.
 
-[CONFIRMED] 마지막 authorization rule은 `anyRequest().permitAll()`이며, 앞선 rule과 일치하지 않는 endpoint는 public입니다.
+[CONFIRMED] Banner, 공개 Book/Review/Like 조회, Category GET, Author 공개 조회와 Ranking 조회 6개는 HTTP GET과 구체적인 path 기준의 `permitAll` matcher에 명시되어 있습니다. 마지막 authorization rule은 `anyRequest().denyAll()`이며, 앞선 rule과 일치하지 않는 request는 차단됩니다.
 
 [CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST, Profile/Profile Image PATCH와 Monthly Sales GET은 명시적인 authenticated matcher에 포함됩니다. `POST /api/categories`는 HTTP method와 exact path 기준의 `denyAll` matcher로 User Server의 anonymous 및 authenticated user 모두에게 비활성화되어 있으며, `GET /api/categories`는 PUBLIC으로 유지됩니다.
 
@@ -56,8 +56,8 @@
 
 ## 검증 상태
 
-[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 36개 automated test가 있습니다. Characterization test는 Reading Goal, Reading Progress, Profile 수정과 Monthly Sales endpoint의 authentication, Category POST 비활성화 및 PUBLIC Category GET을 검증하며 anonymous `GET /api/books`, `GET /api/books/{bookId}`와 `GET /api/user/{userId}/profile`이 계속 허용되는 것을 확인합니다. Monthly Sales Service test는 본인 Book의 판매 없음, 다른 사용자 소유 Book, 존재하지 않는 Book 정책을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
+[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 55개 automated test가 있습니다. Characterization test는 17개 explicit PUBLIC GET endpoint와 public user profile의 anonymous 허용, 기존 authenticated endpoint의 anonymous 차단, Category POST 비활성화 및 unmatched request의 fail-closed 동작을 검증합니다. Monthly Sales Service test는 본인 Book의 판매 없음, 다른 사용자 소유 Book, 존재하지 않는 Book 정책을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
 
-[CONFIRMED] 현재 checkout의 Category Security focused test, 전체 Gradle test와 clean build가 PASS했습니다. Category characterization 결과 anonymous POST는 401, authenticated `ROLE_USER` POST는 403이며 anonymous GET은 허용됩니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization CI PASS이며, 현재 working-tree 변경은 아직 원격 CI 실행 전입니다. Monthly Sales의 403/404는 Service ErrorCode와 기존 `GlobalExceptionHandler` mapping으로 검증되며 실제 `BookController` HTTP contract를 직접 실행하는 MVC test는 없습니다.
+[CONFIRMED] 현재 checkout의 SecurityConfig focused test와 전체 Gradle clean build가 PASS했습니다. Characterization 결과 17개 explicit PUBLIC GET은 anonymous 요청을 허용하고, Category POST는 anonymous 401/authenticated 403, unmatched test-only endpoint는 anonymous 401/authenticated 403입니다. 현재 working-tree 변경은 아직 원격 CI 실행 전입니다. Monthly Sales의 403/404는 Service ErrorCode와 기존 `GlobalExceptionHandler` mapping으로 검증되며 실제 `BookController` HTTP contract를 직접 실행하는 MVC test는 없습니다.
 
 [UNKNOWN] Application runtime 및 external dependency를 포함한 API 통합 동작은 아직 검증되지 않았습니다.

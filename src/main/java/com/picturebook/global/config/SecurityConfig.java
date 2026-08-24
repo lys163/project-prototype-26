@@ -131,6 +131,26 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/api/banners",
+                                "/api/books",
+                                "/api/books/bestsellers",
+                                "/api/books/bestsellers/highlights",
+                                "/api/books/{bookId}",
+                                "/api/books/{bookId}/likes",
+                                "/api/books/{bookId}/reviews",
+                                "/api/categories",
+                                "/api/authors/{authorId}/follow",
+                                "/api/authors/{authorId}/stats",
+                                "/api/authors/{authorId}/books",
+                                "/api/ranking/monthly/prolific-authors",
+                                "/api/ranking/monthly/popular-authors",
+                                "/api/ranking/monthly/popular-books",
+                                "/api/ranking/weekly/prolific-authors",
+                                "/api/ranking/weekly/popular-authors",
+                                "/api/ranking/weekly/popular-books"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/user/*/profile"
                         ).permitAll()
                         .requestMatchers(
@@ -142,7 +162,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/api/auth/refresh"
                         ).permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().denyAll()
                 )
                 .oauth2Login(oauth2 ->
                         oauth2.userInfoEndpoint(userInfo->userInfo.userService(customOAuth2UserService))

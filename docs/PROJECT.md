@@ -68,7 +68,7 @@ src/main/java/com/picturebook/
 
 ## Test 상태
 
-[CONFIRMED] `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 36개 automated test가 있습니다.
+[CONFIRMED] `src/test`에는 explicit PUBLIC/authenticated/deny/fallback `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 다루는 4개 test class와 55개 automated test가 있습니다.
 
 [CONFIRMED] 현재 checkout의 Category Security focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions의 마지막 확인 결과는 P0-2 Reading Progress authorization `main` push CI PASS이며, 현재 working-tree 변경은 아직 원격 CI 실행 전입니다.
 
