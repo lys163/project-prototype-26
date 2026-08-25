@@ -26,8 +26,8 @@
 - PostgreSQL/JPA, Redis, MinIO integration이 존재합니다.
 - local development 및 host-oriented deployment용 Docker Compose configuration이 존재합니다.
 - AWS infrastructure는 현재 존재하지 않습니다.
-- 이 repository에는 frontend source, test source, DB migration tool/file, AWS IaC가 없습니다.
-- AI-generation entity와 external AI server에 대한 development Compose reference는 존재하지만, 이 codebase에는 AI-generation controller, service, client, queue worker, model-provider integration이 없습니다.
+- 이 repository에는 frontend source, DB migration tool/file, AWS IaC가 없습니다. Backend automated test source와 GitHub-hosted build/test CI는 존재합니다.
+- AI-generation entity와 비활성화된 external AI server development Compose 예시는 존재하지만, 이 codebase에는 AI-generation controller, service, client, queue worker, model-provider integration이 없습니다.
 - 이 codebase에는 search API, search service, keyword query, PostgreSQL full-text search, Elasticsearch, OpenSearch implementation이 없습니다.
 - 구현 완료로 이 section의 현재 상태가 달라지면 이 section과 관련 `docs/`의 갱신 필요성을 함께 검토합니다.
 
@@ -113,7 +113,7 @@
 
 ## 11. Testing 규칙
 
-- 이 repository에는 현재 test source가 없습니다. 새 behavior에는 비례하는 automated test가 포함되어야 합니다.
+- 이 repository에는 security, auth, service, storage behavior를 다루는 automated test source가 있습니다. 새 behavior에는 비례하는 automated test가 포함되어야 합니다.
 - 해당 영역이 변경되면 domain/service logic에는 unit test를, persistence, security, API contract, storage behavior에는 integration 또는 controller test를 추가합니다.
 - test가 실행되지 않았다면 변경을 verified로 표시하지 않습니다. 무엇을 실행했는지와 검증되지 않은 항목을 정확히 명시합니다.
 - external system이 필요한 변경에는 안전한 local/test configuration을 사용하거나 external prerequisite를 명확히 설명합니다.

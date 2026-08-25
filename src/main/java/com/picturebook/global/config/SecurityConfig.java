@@ -56,7 +56,6 @@ public class SecurityConfig {
                                 "/swagger-resources/**"
                         ).permitAll()
                         .requestMatchers(
-                                "/api/auth/logout",
                                 "/api/user/me",
                                 "/api/user/me/**",
                                 "/api/books/me",
@@ -157,6 +156,10 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/categories"
                         ).denyAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/auth/logout"
+                        ).permitAll()
                         .requestMatchers(
                                 "/login/**",
                                 "/oauth2/**",

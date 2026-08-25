@@ -27,7 +27,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 - Reading progress와 monthly reading goal
 - Category, banner, 월간·주간 ranking
 - MinIO presigned upload URL과 object-storage abstraction
-- Swagger/OpenAPI, Actuator, Prometheus 연동 구성
+- Swagger/OpenAPI, Actuator와 Prometheus registry dependency
 
 ### 개발 예정 또는 미구현
 
@@ -56,10 +56,10 @@ AI provider/model, Queue, Vector Database, Database migration 도구, AWS Servic
 | API 문서 | SpringDoc OpenAPI, Swagger UI |
 | Container | Docker, Docker Compose |
 | CI/CD | GitHub-hosted `ubuntu-latest`에서 build/test를 수행하는 CI. 별도의 legacy self-hosted Compose deployment workflow는 runner 부재로 실행되지 않음 |
-| Monitoring | Spring Actuator, Prometheus registry, Prometheus/Grafana Compose 정의. Repository 내부 monitoring file은 누락됨 |
-| AI | AI-generation entity와 development Compose reference만 존재. 실행 integration은 미구현 |
+| Monitoring | Spring Actuator와 Prometheus registry. Development Compose의 Prometheus/Grafana는 비활성화돼 있고 host-oriented Compose 정의가 mount하는 monitoring file은 누락됨 |
+| AI | AI-generation entity와 비활성화된 development Compose 예시만 존재. 실행 integration은 미구현 |
 | AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
-| Test | JUnit Platform, Web MVC/Security test support, 4개 test class와 36개 automated test |
+| Test | JUnit Platform, Web MVC/Security test support, 11개 test class. 최근 기록된 전체 Gradle 실행은 91개 test PASS |
 | Database migration | Versioned migration 도구와 migration file 없음 |
 
 ## 4. Architecture 개요
@@ -96,17 +96,13 @@ AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 �
 
 Backend root의 `.env.example`을 `.env`로 복사한 뒤, 각 local credential을 직접 입력합니다. `.env`는 Git에서 ignore되며, Docker Compose는 variable substitution으로 사용하고 native Spring Boot 실행은 `spring.config.import`를 통해 같은 file을 읽습니다. `.env.example`만으로는 실행할 수 없으며 실제 local credential이 필요합니다.
 
-Backend root의 `.env.example`을 `.env`로 복사한 뒤, 각 local credential을 직접 입력합니다. `.env`는 Git에서 ignore되며, Docker Compose는 variable substitution으로 사용하고 native Spring Boot 실행은 `spring.config.import`를 통해 같은 file을 읽습니다. `.env.example`만으로는 실행할 수 없으며 실제 local credential이 필요합니다.
-
-- Database: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
-- Redis: `SPRING_DATA_REDIS_HOST`, `SPRING_DATA_REDIS_PORT`
+- Database credential: `DB_USERNAME`, `DB_PASSWORD`
 - OAuth2: `KAKAO_CLIENT_ID`, `KAKAO_CLIENT_SECRET`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
-- JWT: `JWT_SECRET`, `JWT_ACCESS_TOKEN_EXPIRY`, `JWT_REFRESH_TOKEN_EXPIRY`
-- Application: `APP_FRONTEND_URL`, `KAKAO_ADMIN_KEY`
-- MinIO: `MINIO_ENDPOINT`, `MINIO_PUBLIC_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`
-- Profile: `SPRING_PROFILES_ACTIVE`
+- JWT: `JWT_SECRET`
+- MinIO: `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
+- Host-oriented monitoring: `GF_SECURITY_ADMIN_USER`, `GF_SECURITY_ADMIN_PASSWORD`
 
-`GEMINI_API_KEY` is required only by the optional external AI service referenced by development Compose; this backend does not implement AI-provider integration.
+`.env.example`의 `GEMINI_API_KEY`는 비활성화된 external AI service 예시를 위해 남아 있는 placeholder입니다. 현재 active development Compose service, Spring Backend 또는 Frontend의 core runtime requirement가 아닙니다.
 
 `application.properties`는 `secret` profile을 include하지만 repository에는 `application-secret.properties`가 없습니다. Environment-specific 값의 실제 제공 방식은 실행 환경에서 준비해야 합니다.
 
@@ -124,7 +120,7 @@ Windows:
 .\gradlew.bat bootRun
 ```
 
-Gradle clean build는 검증됐지만 위 `bootRun` 명령과 application runtime은 검증하지 않았습니다. PostgreSQL, Redis, MinIO 및 필요한 environment variable이 먼저 준비돼야 합니다.
+Gradle clean build는 검증됐지만 위 `bootRun` 명령과 application runtime은 검증하지 않았습니다. Native 기본값은 PostgreSQL `localhost:5432/postgres`, Redis `localhost:6379`, Backend `localhost:8080`이며 Development Compose의 database name과 일치합니다. MinIO를 포함한 필요한 environment variable도 먼저 준비돼야 합니다.
 
 ### Build 및 Test
 
@@ -142,7 +138,7 @@ Windows:
 .\gradlew.bat test
 ```
 
-현재 `src/test`에는 `SecurityConfig` characterization, `BookService`/`ReviewService` ownership, OAuth2 token-log 비노출을 검증하는 4개 test class와 36개 automated test가 있습니다. 현재 checkout의 Category Security focused test, 전체 Gradle test와 clean build가 PASS했습니다. GitHub Actions CI의 마지막 확인 결과는 P0-2 Reading Progress authorization 변경 `main` push PASS이며, 현재 working-tree 변경은 아직 원격 CI 실행 전입니다. 이 최소 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
+현재 `src/test`에는 SecurityConfig, OAuth/Logout, service ownership과 Storage policy/controller/adapter를 다루는 11개 test class가 있습니다. 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test와 clean build PASS이며, 현재 Logout working-tree 변경은 아직 원격 CI 실행 전입니다. 이 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
 
 ### Docker Compose
 
@@ -152,7 +148,7 @@ Development Compose의 의도된 실행 명령은 다음과 같습니다.
 docker compose -f docker-compose-dev.yml up --build
 ```
 
-그러나 `docker-compose-dev.yml`이 참조하는 `../picturebook-ai`와 monitoring configuration은 현재 workspace에 없습니다. 따라서 이 repository만으로 development stack의 완전한 실행을 보장할 수 없습니다.
+현재 Development Compose의 active service는 Backend application, PostgreSQL, loopback(`127.0.0.1`)에 publish되는 Redis, MinIO입니다. AI server, ChromaDB, Prometheus, Grafana 정의는 주석 상태이며 active startup 대상이 아닙니다. 필요한 `.env` credential과 image/build prerequisite를 포함한 full runtime은 이번 문서 작업에서 실행 검증하지 않았습니다.
 
 Host-oriented Compose의 구성상 실행 명령은 다음과 같습니다.
 
@@ -160,7 +156,7 @@ Host-oriented Compose의 구성상 실행 명령은 다음과 같습니다.
 docker compose up -d --build
 ```
 
-이 구성은 별도의 `.env`, monitoring file, 외부 PostgreSQL·Redis·MinIO를 전제로 합니다. Production 또는 shared environment에서의 실제 실행·중단·재시작에는 대상 환경과 범위가 명시된 사람의 승인이 필요합니다.
+이 구성은 별도의 `.env`, repository에 없는 monitoring file, 외부 PostgreSQL·Redis·MinIO를 전제로 합니다. 따라서 현재 checkout만으로 Prometheus/Grafana를 포함한 host-oriented stack startup은 완전하지 않습니다. Production 또는 shared environment에서의 실제 실행·중단·재시작에는 대상 환경과 범위가 명시된 사람의 승인이 필요합니다.
 
 ## 6. AI Agent 활용 방식
 
@@ -179,7 +175,7 @@ docker compose up -d --build
 ## 7. 프로젝트 개발 순서
 
 1. **완료 — Repository baseline 및 문서 정리**
-2. **예정 — 확인된 보안 문제와 기술 부채 처리**
+2. **완료 — 현재 source의 P0 token 전달·authorization·storage·tracked credential·logout 보안 수정**
 3. **예정 — AWS target architecture 설계 및 승인**
 4. **예정 — Database/Object Storage migration 전략 수립**
 5. **예정 — 승인된 방식으로 AWS infrastructure 구축**
@@ -193,6 +189,8 @@ docker compose up -d --build
 13. **예정 — Production deployment 및 최종 검증**
 
 각 단계의 Architecture, provider, migration 및 infrastructure 기술은 승인된 결정이 생긴 뒤 관련 docs에 기록합니다.
+
+Refresh Token Rotation/replay detection, multi-device/session 정책, access token localStorage 개선, JSESSIONID lifecycle, CSRF 및 refresh/logout Origin/Referer 검토는 별도 AUTH_SECURITY 후속 작업이며 현재 완료 항목에 포함되지 않습니다.
 
 ## 8. 프로젝트 문서
 

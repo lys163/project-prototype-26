@@ -2,14 +2,12 @@ package com.picturebook.auth.controller;
 
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.picturebook.auth.dto.TokenResponseDto;
 import com.picturebook.auth.service.AuthService;
 import com.picturebook.global.response.ApiResponse;
-import com.picturebook.global.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,17 +42,15 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @CookieValue(name = "refreshToken", required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        if (userDetails != null){
-            authService.logout(userDetails.getUser().getId());
-        }
+        authService.logout(refreshToken);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
             .path("/")
             .httpOnly(true)
-            .secure(true) // https에서는 ture로 변경
+            .secure(true)
             .maxAge(0)
             .sameSite("Lax")
             .build();

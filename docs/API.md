@@ -28,7 +28,7 @@
 
 [CONFIRMED] Security configuration은 선택된 user, storage, report, follow, review, like, paid-publication, personal-book endpoint에 명시적으로 authentication을 요구합니다. JWT filter는 `Authorization` request header에서 bearer token을 읽습니다.
 
-[CONFIRMED] OAuth2 login과 `/api/auth/refresh`는 configuration에 따라 public입니다.
+[CONFIRMED] OAuth2 login, `/api/auth/refresh`, `POST /api/auth/logout`은 configuration에 따라 public입니다. Logout은 optional refresh-token cookie를 검증하고 Redis의 현재 token과 exact match일 때만 원자적으로 삭제하며, cookie가 없거나 invalid/expired/mismatch여도 cookie를 만료시키고 HTTP 204를 반환합니다.
 
 [CONFIRMED] Banner, 공개 Book/Review/Like 조회, Category GET, Author 공개 조회와 Ranking 조회 6개는 HTTP GET과 구체적인 path 기준의 `permitAll` matcher에 명시되어 있습니다. 마지막 authorization rule은 `anyRequest().denyAll()`이며, 앞선 rule과 일치하지 않는 request는 차단됩니다.
 
@@ -58,7 +58,7 @@
 
 ## 검증 상태
 
-[CONFIRMED] 이 repository에는 `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 검증하는 4개 test class, 55개 automated test가 있습니다. Characterization test는 17개 explicit PUBLIC GET endpoint와 public user profile의 anonymous 허용, 기존 authenticated endpoint의 anonymous 차단, Category POST 비활성화 및 unmatched request의 fail-closed 동작을 검증합니다. Monthly Sales Service test는 본인 Book의 판매 없음, 다른 사용자 소유 Book, 존재하지 않는 Book 정책을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
+[CONFIRMED] 이 repository에는 11개 test class와 91개 automated test가 있습니다. Characterization test는 17개 explicit PUBLIC GET endpoint와 public user profile의 anonymous 허용, 기존 authenticated endpoint의 anonymous 차단, access token 없는 logout 허용, Category POST 비활성화 및 unmatched request의 fail-closed 동작을 검증합니다. Logout focused test는 invalid/expired/missing refresh token의 idempotency, Redis exact-match compare-and-delete와 cookie 만료를 검증합니다. Monthly Sales Service test는 본인 Book의 판매 없음, 다른 사용자 소유 Book, 존재하지 않는 Book 정책을 검증합니다. 전체 API contract test coverage는 아직 없습니다.
 
 [CONFIRMED] 현재 checkout의 SecurityConfig focused test와 전체 Gradle clean build가 PASS했습니다. Characterization 결과 17개 explicit PUBLIC GET은 anonymous 요청을 허용하고, Category POST는 anonymous 401/authenticated 403, unmatched test-only endpoint는 anonymous 401/authenticated 403입니다. 현재 working-tree 변경은 아직 원격 CI 실행 전입니다. Monthly Sales의 403/404는 Service ErrorCode와 기존 `GlobalExceptionHandler` mapping으로 검증되며 실제 `BookController` HTTP contract를 직접 실행하는 MVC test는 없습니다.
 

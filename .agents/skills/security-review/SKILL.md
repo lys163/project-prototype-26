@@ -6,10 +6,11 @@
 
 ## 알려진 repository finding
 
-- OAuth2 success handling은 현재 access token과 refresh token을 logging합니다.
-- Development Compose에는 commit된 plaintext secret material이 포함되어 있습니다.
+- OAuth2 success handling은 token 실제 값을 logging하거나 callback query로 access token을 전달하지 않습니다.
+- 현재 tracked application/Compose credential은 environment reference로 외부화되어 있습니다. 과거 노출 가능 credential의 rotation 여부는 `[UNKNOWN]`입니다.
 - 구성된 MinIO bucket은 initialization 중에 public read access를 부여받습니다.
-- 일치하는 규칙이 없는 security route는 기본적으로 permit-all입니다.
+- 일치하는 규칙이 없는 security route는 `anyRequest().denyAll()`로 차단됩니다.
+- Logout은 optional refresh-token cookie를 검증하고 Redis current value와 exact match일 때만 원자적으로 삭제합니다.
 
 ## 절차
 

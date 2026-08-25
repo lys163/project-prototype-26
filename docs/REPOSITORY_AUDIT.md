@@ -19,6 +19,11 @@
 | P0-2 Profile authorization source 기준 commit | `f903d13` |
 | P0-2 Monthly Sales authorization local 검증 | 현재 working tree의 focused test, 전체 test, clean build PASS |
 | P0-2 Category POST 비활성화 local 검증 | 2026-08-23, 현재 working tree의 focused test, 전체 test, clean build PASS |
+| OAuth access-token 전달 개선 | commit `dfe5cc5`, callback query 제거 및 refresh 기반 전달 |
+| Authorization fail-closed | commit `94feb33`, explicit PUBLIC matcher 및 `anyRequest().denyAll()` |
+| Storage upload 보안 | commit `051316e`, signed POST policy·MIME·size·namespace 검증 |
+| Secret/Credential source fix | commit `1c3d9b1`, tracked plaintext 제거 및 environment reference 전환 |
+| 현재 working-tree 기준 | 2026-08-25, refresh-cookie 기반 idempotent Logout source/test/docs 포함 |
 
 [CONFIRMED] 이 audit에서는 현재 checkout에서 사용할 수 있는 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration을 조사했습니다.
 
@@ -36,7 +41,7 @@
 4. frontend source, migration tooling, AWS IaC, AWS resource configuration은 없습니다.
 5. 이 repository에는 search implementation이 없습니다.
 6. AI-generation entity는 있지만 AI server 또는 model provider를 호출하는 implementation은 없습니다.
-7. Development Compose는 조사한 workspace에 없는 AI-server path를 참조합니다.
+7. Development Compose에는 조사한 workspace에 없는 AI-server path를 가리키는 주석 예시가 있지만 해당 AI/ChromaDB service는 비활성화돼 있습니다.
 8. GitHub-hosted runner 기반 build/test CI와 legacy host-oriented self-hosted CD workflow가 분리되어 있습니다. 현재 self-hosted runner가 없어 legacy workflow는 실행되지 않습니다.
 9. 사용자는 현재 AWS infrastructure가 없음을 확인했습니다.
 10. `src/main/java/com/picturebook` 아래에는 145개 Java main source, 13개 controller, 17개 service, 12개 repository, 20개 JPA entity가 있습니다.
@@ -61,13 +66,16 @@
 - MinIO 직접 upload/delete와 object-storage abstraction
 - Swagger/OpenAPI, Actuator, Prometheus dependency/configuration
 - MDC 및 AOP logging
-- explicit PUBLIC/authenticated/deny/fallback `SecurityConfig` matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출을 다루는 4개 test class, 55개 automated test
+- explicit PUBLIC/authenticated/deny/fallback SecurityConfig, OAuth/Logout, service ownership 및 Storage behavior를 다루는 11개 test class. 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test PASS
 - OAuth2 login 성공 log의 access token/refresh token 실제 값 출력 제거와 기존 Redis/cookie/redirect 계약 검증
 - `GET /api/reading-goals`와 `PUT /api/reading-goals`의 method-specific authentication 및 PUBLIC book endpoint 회귀 검증
 - Reading Progress GET/PUT/complete POST의 method-specific authentication 및 PUBLIC book 목록·상세 회귀 검증
 - Profile/Profile Image PATCH의 method-specific authentication 및 PUBLIC user profile 조회 회귀 검증
 - Monthly Sales GET의 method-specific authentication, Book ownership 정책 및 PUBLIC book 목록·상세 회귀 검증
 - Category POST의 exact-path `denyAll`과 PUBLIC Category GET 회귀 검증
+- OAuth callback query access-token 제거와 refresh-cookie 기반 access-token 획득
+- Optional refresh-token cookie 기반 idempotent Logout, Redis exact-match compare-and-delete 및 cookie 만료
+- Tracked application/Compose plaintext credential 제거, ignored `.env`와 tracked `.env.example` 경계
 - GitHub-hosted runner에서 build/test만 수행하는 독립 CI workflow
 
 ## 현재 미구현 영역
@@ -85,7 +93,8 @@
 - Versioned database migration
 - AWS infrastructure, IaC, SDK 및 AWS deployment
 - Repository 내부의 완전한 monitoring configuration
-- 현재 repository만으로 재현 가능한 standalone local Compose 실행
+- Development Compose 및 native application runtime의 실행 검증
+- Host-oriented Compose가 요구하는 monitoring configuration
 
 ## Database 및 JPA 구조
 
@@ -107,7 +116,8 @@
 
 - Redis는 현재 OAuth2 login 성공 시 발급한 refresh token을 `RT:{userId}` key로 저장하는 데 사용됩니다.
 - Refresh 요청은 JWT를 검증한 뒤 Redis의 저장 value와 비교합니다.
-- Logout은 해당 user의 refresh-token key를 삭제합니다.
+- Logout은 optional refresh-token cookie의 JWT와 subject를 검증하고, 요청 token이 Redis current value와 exact match일 때만 Lua compare-and-delete로 해당 key를 원자적으로 삭제합니다. Missing/invalid/expired/mismatch token은 Redis value를 삭제하지 않습니다.
+- Development Compose의 Redis host publish는 `127.0.0.1:6379`로 제한됩니다.
 - 이 repository에서 cache, session, queue, distributed lock 또는 다른 domain data를 위한 Redis 사용은 발견되지 않았습니다.
 
 [UNKNOWN] 실제 Redis data, persistence, backup, availability, memory usage, network/security configuration은 확인할 수 없습니다.
@@ -133,6 +143,8 @@
 - Kakao/Naver OAuth2 login이 구성되어 있습니다.
 - Access token은 `Authorization: Bearer` header의 JWT로 처리됩니다.
 - Refresh token은 Redis에 저장되고 HttpOnly, Secure, SameSite=Lax cookie로 전달됩니다.
+- OAuth success callback에는 `isNewUser`만 포함되며 access token은 전달되지 않습니다. Frontend는 refresh endpoint를 호출해 access token을 획득합니다.
+- `POST /api/auth/logout`은 access token 없이 호출할 수 있고 모든 idempotent 결과에서 refresh-token cookie를 만료시키며 HTTP 204를 반환합니다.
 - 선택된 user, storage, report, review, like, follow, paid-publication endpoint는 `SecurityConfig`에서 명시적으로 authentication을 요구합니다.
 - Banner, 공개 Book/Review/Like 조회, Category GET, Author 공개 조회와 Ranking 조회 6개는 explicit GET `permitAll` matcher에 포함됩니다.
 - `SecurityConfig`의 마지막 rule은 `anyRequest().denyAll()`이며 명시된 rule과 일치하지 않는 request는 차단됩니다.
@@ -152,8 +164,9 @@
 [CONFIRMED]
 
 - Development Compose의 tracked plaintext credential/secret material은 제거되었습니다. Local credential은 ignored `.env`에서 제공하고 tracked `.env.example`에는 variable name만 둡니다. Historical exposure의 rotation 여부는 [UNKNOWN]입니다.
-- Default application configuration은 OAuth/JWT/admin secret의 일부를 environment variable로 참조합니다.
+- Default application configuration은 Database, OAuth 및 JWT credential을 environment variable로 참조합니다.
 - Production Compose는 주요 credential을 environment variable로 참조합니다.
+- Local `.env`는 Git에서 ignore되고 `.env.example`만 tracked됩니다. Frontend `.env.example`에는 API/proxy URL만 있으며 browser-side provider secret injection은 없습니다.
 - Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 repository에 등록된 self-hosted runner는 없습니다.
 - Discord webhook은 GitHub Actions secret reference를 통해 전달됩니다.
 - AWS managed-secret integration 또는 다른 production secret-management implementation은 없습니다.
@@ -165,8 +178,8 @@
 [CONFIRMED]
 
 - Dockerfile은 Java 21 JDK/JRE를 사용하는 multi-stage build이며 Gradle `bootJar`로 application artifact를 생성합니다.
-- Development Compose는 application, PostgreSQL, Redis, MinIO, external AI server, ChromaDB, Prometheus, Grafana를 정의합니다.
-- Development Compose가 참조하는 `../picturebook-ai`와 monitoring path는 조사한 workspace에 존재하지 않습니다.
+- Development Compose의 active service는 application, PostgreSQL, Redis, MinIO입니다. AI server, ChromaDB, Prometheus, Grafana 예시는 주석 상태입니다.
+- 주석의 `../picturebook-ai` path는 조사한 workspace에 존재하지 않습니다. Development monitoring mount도 비활성 상태입니다.
 - Production Compose는 application, Prometheus, Grafana만 정의하며 PostgreSQL, Redis, MinIO가 Compose stack 외부의 host 또는 external environment에 이미 존재한다고 가정합니다.
 - Production Compose는 `host.docker.internal` 및 environment variable을 통해 외부 PostgreSQL, Redis, MinIO에 연결합니다.
 - Production Compose가 mount하는 monitoring configuration은 repository에 없습니다.
@@ -181,7 +194,7 @@
 
 | Gap | Evidence |
 | --- | --- |
-| Test coverage 제한 | 4개 test class와 55개 automated test는 matcher와 대표 ownership의 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
+| Test coverage 제한 | 11개 test class와 최근 기록된 91개 test는 Security/Auth/Storage 및 대표 ownership의 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
 | Runtime 미검증 | Gradle test와 clean build는 PASS했지만 application과 Compose는 실행하지 않았습니다. |
 | Versioned database migration 부재 | Flyway/Liquibase dependency 또는 migration file이 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
@@ -189,7 +202,7 @@
 | Book creation/editing 부재 | Book/Page/Character 생성·편집 controller/service flow가 없습니다. |
 | Auto-save 실행 부재 | `AutoSaveSnapshot` entity만 있고 controller/service/repository가 없습니다. |
 | Purchase 생성 API 부재 | Purchase entity/service/repository는 있지만 purchase 생성 controller/API가 없습니다. |
-| repository의 Compose input 불완전 | 참조된 monitoring path와 AI-server path가 없습니다. |
+| Host-oriented Compose input 불완전 | Active Prometheus/Grafana service가 mount하는 monitoring path가 없습니다. Development AI/monitoring 예시는 비활성 상태입니다. |
 | CD safety gate 부재 | 독립 CI의 build/test는 PASS했지만 legacy CD에는 health verification, approval, rollback 단계가 없습니다. |
 | AWS definition 부재 | AWS code, configuration, IaC가 없습니다. |
 
@@ -197,8 +210,8 @@
 
 [CONFIRMED]
 
-- Development Compose에는 plaintext secret material이 포함되어 있으며, value는 여기에서 반복하지 않습니다.
-- OAuth2 success redirect URL은 access token을 query parameter로 전달합니다.
+- Tracked source/config의 plaintext credential은 environment reference로 전환됐지만 과거 Git history에 노출됐을 수 있는 credential의 rotation 여부는 확인되지 않았습니다.
+- OAuth2 success redirect는 access token을 전달하지 않고 `isNewUser`만 전달합니다. Access token은 refresh endpoint response로 발급됩니다.
 - MinIO startup logic은 확정된 public image 정책에 따라 구성된 bucket에 public read를 부여합니다.
 - Storage quota/rate limit 및 old/failed/orphan object cleanup은 아직 없습니다.
 - security configuration은 일치하는 규칙이 없는 request를 `denyAll`로 차단합니다.
@@ -212,14 +225,14 @@
 
 [INFERRED] 안전한 database 이전에는 versioned migration approach와 명시적인 data export/import 및 verification plan이 필요합니다.
 
-[INFERRED] Production release 전에는 access-token 전달 방식, endpoint authorization, plaintext secret, object-storage 공개 범위 및 upload 제한을 해결하거나 승인된 security decision으로 기록해야 합니다.
+[INFERRED] 현재 source에서 access-token query 전달, unmatched route fail-open, tracked plaintext credential 및 Storage upload policy 문제는 수정됐습니다. Production release 전에는 credential rotation 증거, AUTH_SECURITY 후속 정책, public bucket 결정과 quota/cleanup, production cookie/CORS/Origin/TLS 설정을 별도로 검토해야 합니다.
 
 ## AWS 이전 전 해결 또는 결정 필요 사항
 
 [INFERRED]
 
 - 노출 가능 credential의 rotation 필요 여부 확인
-- 전체 endpoint authentication, role 및 object-level authorization 검토
+- 새 endpoint 추가 시 explicit authentication, role 및 object-level authorization 회귀 검토
 - AI generation의 quota/rate limit 및 storage usage 정책 결정
 - Profile/AI image의 old/failed/orphan object cleanup lifecycle 결정
 - Production에서 Hibernate `create/update` 의존을 제거하기 위한 versioned migration approach 결정
@@ -254,7 +267,6 @@
 
 [UNKNOWN]
 
-- frontend repository의 location 및 status
 - AI-server repository의 location, API contract, status
 - 현재 application runtime status
 - 현재 production server 및 Docker container status

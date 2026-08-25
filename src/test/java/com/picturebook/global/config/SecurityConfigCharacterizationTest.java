@@ -247,6 +247,12 @@ class SecurityConfigCharacterizationTest {
                         .with(user("user").roles("USER")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void logoutAllowsRequestsWithoutAccessToken() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isNoContent());
+    }
 }
 
 @RestController
@@ -319,6 +325,11 @@ class SecurityCharacterizationEndpoints {
 
     @PostMapping("/api/categories")
     ResponseEntity<Void> createCategory() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/auth/logout")
+    ResponseEntity<Void> logout() {
         return ResponseEntity.noContent().build();
     }
 

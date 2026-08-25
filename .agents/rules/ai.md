@@ -4,7 +4,7 @@
 
 - `Book`, `Page`, `BookCharacter`, master-data entity, AI-generation log entity는 picture-book generation의 기반을 포함합니다.
 - 이 저장소에는 generation controller, service, provider client, queue worker, AI-server integration이 구현되어 있지 않습니다.
-- Development Compose는 external AI server와 ChromaDB를 참조하지만, source와 API contract는 이 저장소에 없습니다.
+- Development Compose에는 external AI server와 ChromaDB 예시가 주석 상태로 남아 있지만 active service가 아니며, source와 API contract도 이 저장소에 없습니다.
 
 ## 규칙
 

@@ -7,8 +7,8 @@ backend 변경에 비례하는 verification을 추가하고 실행합니다.
 ## 확인된 기준선
 
 - Gradle은 build tool이며 `test`는 JUnit Platform을 사용하도록 구성되어 있습니다.
-- 현재 test source directory는 존재하지 않습니다.
-- audit에서는 현재 build 또는 test suite를 실행하지 않았습니다.
+- security, auth, service, storage behavior를 다루는 test source directory가 존재합니다.
+- 변경을 verified로 보고할 때는 해당 checkout에서 실제 실행한 focused test와 broader build/test 결과를 구분합니다.
 
 ## 절차
 

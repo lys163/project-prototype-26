@@ -54,6 +54,10 @@ Production Compose
 
 [CONFIRMED] Spring Security는 stateless OAuth2/JWT 구조이며 PUBLIC, authenticated 및 deny endpoint를 method/path matcher로 명시합니다. 마지막 authorization rule은 `anyRequest().denyAll()`이므로 명시된 rule과 일치하지 않는 request는 차단됩니다.
 
+[CONFIRMED] OAuth login 성공 시 refresh token은 Redis와 HttpOnly/Secure/SameSite=Lax cookie에 저장되고 callback에는 `isNewUser`만 전달됩니다. Frontend는 refresh endpoint로 access token을 획득합니다. Logout은 access token 없이 optional refresh-token cookie로 호출하며 Redis current value와 exact match일 때만 원자적으로 삭제하고 cookie를 만료시킵니다.
+
+[INFERRED] OAuth2 authorization request 과정의 default session-backed state 때문에 JSESSIONID가 사용될 수 있지만 일반 API 인증은 JWT/Redis 구조입니다. JSESSIONID lifecycle 정리는 `[FUTURE]`입니다.
+
 [CONFIRMED] Reading Goal GET/PUT, Reading Progress GET/PUT/complete POST, Profile/Profile Image PATCH와 Monthly Sales GET은 HTTP method와 구체적인 path pattern 기준으로 authentication을 요구합니다. Monthly Sales는 Service에서 Book 존재 여부와 ownership을 검사합니다. `POST /api/categories`는 HTTP method와 exact path 기준으로 `denyAll` 처리되고 `GET /api/categories`는 PUBLIC입니다. 모든 authenticated user에는 `ROLE_USER`가 부여되며 다른 role 또는 method-level authorization은 발견되지 않았습니다.
 
 ## AI-generation 경계
@@ -62,9 +66,9 @@ Production Compose
 
 [CONFIRMED] `src/main/java`에서 AI-generation API endpoint, AI client, model-provider SDK, HTTP client call, queue worker, service implementation은 발견되지 않았습니다.
 
-[CONFIRMED] `docker-compose-dev.yml`은 Gemini API-key environment variable을 사용하는 `ai-server` service와 ChromaDB service를 정의합니다. Spring application code는 AI-server URL 또는 ChromaDB를 참조하지 않습니다.
+[CONFIRMED] `docker-compose-dev.yml`의 `ai-server`, Gemini key 전달 및 ChromaDB service 예시는 주석 상태로 비활성화돼 있습니다. Active application environment에 `AI_SERVER_URL`은 남아 있지만 Spring application code는 이를 소비하지 않습니다.
 
-[CONFIRMED] Development Compose가 참조하는 `../picturebook-ai`와 Prometheus/Grafana monitoring configuration path는 조사한 workspace에 존재하지 않습니다.
+[CONFIRMED] Development Compose 주석이 가리키는 `../picturebook-ai`는 조사한 workspace에 존재하지 않습니다. Development Prometheus/Grafana도 주석 상태입니다. Host-oriented Compose가 mount하는 Prometheus/Grafana configuration path는 repository에 존재하지 않습니다.
 
 [UNKNOWN] 참조된 AI server의 source, API contract, deployment process, operational status는 이 repository에서 확인할 수 없습니다.
 
@@ -78,7 +82,9 @@ Production Compose
 
 ## 현재 operational gap
 
-[CONFIRMED] 이 repository에는 4개 test class와 55개 automated test가 있으며 SecurityConfig focused test와 전체 Gradle clean build가 PASS했습니다. 현재 test는 explicit PUBLIC/authenticated/deny/fallback matcher characterization, `BookService`/`ReviewService` ownership과 OAuth2 token-log 비노출의 최소 안전망이며 전체 API/runtime coverage는 아닙니다.
+[CONFIRMED] 이 repository에는 11개 test class가 있으며 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test와 clean build PASS입니다. Test는 SecurityConfig, OAuth/Logout, service ownership과 Storage behavior를 다루지만 전체 API/runtime coverage는 아닙니다.
+
+[CONFIRMED] Development Compose의 active service는 application, PostgreSQL, Redis, MinIO이고 Redis host port는 loopback에만 publish됩니다. Host-oriented Compose는 external PostgreSQL/Redis/MinIO와 repository에 없는 monitoring configuration을 전제로 합니다.
 
 [CONFIRMED] Flyway, Liquibase, versioned migration directory/file은 없으며 default/development는 Hibernate `create`, production Compose는 `update`를 설정합니다.
 
