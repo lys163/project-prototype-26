@@ -151,7 +151,7 @@
 
 [CONFIRMED]
 
-- Development Compose에는 OAuth, JWT, database, MinIO 및 관리 service와 관련된 plaintext credential/secret material이 포함되어 있습니다. 실제 value는 이 문서에 기록하지 않습니다.
+- Development Compose의 tracked plaintext credential/secret material은 제거되었습니다. Local credential은 ignored `.env`에서 제공하고 tracked `.env.example`에는 variable name만 둡니다. Historical exposure의 rotation 여부는 [UNKNOWN]입니다.
 - Default application configuration은 OAuth/JWT/admin secret의 일부를 environment variable로 참조합니다.
 - Production Compose는 주요 credential을 environment variable로 참조합니다.
 - Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 repository에 등록된 self-hosted runner는 없습니다.

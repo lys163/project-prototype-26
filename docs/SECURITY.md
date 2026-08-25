@@ -21,7 +21,7 @@
 
 ## 확인된 security finding
 
-[CONFIRMED] `docker-compose-dev.yml`에는 local development 관련 service 및 OAuth/JWT 관련 configuration을 위한 commit된 plaintext credential/secret이 포함되어 있습니다. Secret value는 이 document에 의도적으로 재현하지 않습니다.
+[CONFIRMED] tracked `application.properties` 및 Compose configuration의 plaintext credential material은 제거되었습니다. Local development credential은 ignored `.env`에서 제공하며 tracked `.env.example`에는 variable name만 있습니다. Historical exposure의 rotation 여부는 별도 운영 follow-up입니다.
 
 [CONFIRMED] `OAuth2SuccessHandler`의 login 성공 log에는 token 실제 값이 포함되지 않습니다. Focused test는 refresh token 값이 log에 포함되지 않으며 기존 Redis 저장, refresh-token cookie와 `isNewUser` redirect가 유지되고 access token이 redirect에 포함되거나 OAuth success 단계에서 생성되지 않는 것을 검증합니다.
 

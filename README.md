@@ -94,6 +94,10 @@ AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 �
 
 실행 환경에 따라 다음 종류의 configuration이 필요합니다. 실제 Secret 값은 repository나 문서에 기록하지 않습니다.
 
+Backend root의 `.env.example`을 `.env`로 복사한 뒤, 각 local credential을 직접 입력합니다. `.env`는 Git에서 ignore되며, Docker Compose는 variable substitution으로 사용하고 native Spring Boot 실행은 `spring.config.import`를 통해 같은 file을 읽습니다. `.env.example`만으로는 실행할 수 없으며 실제 local credential이 필요합니다.
+
+Backend root의 `.env.example`을 `.env`로 복사한 뒤, 각 local credential을 직접 입력합니다. `.env`는 Git에서 ignore되며, Docker Compose는 variable substitution으로 사용하고 native Spring Boot 실행은 `spring.config.import`를 통해 같은 file을 읽습니다. `.env.example`만으로는 실행할 수 없으며 실제 local credential이 필요합니다.
+
 - Database: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
 - Redis: `SPRING_DATA_REDIS_HOST`, `SPRING_DATA_REDIS_PORT`
 - OAuth2: `KAKAO_CLIENT_ID`, `KAKAO_CLIENT_SECRET`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
@@ -101,6 +105,8 @@ AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 �
 - Application: `APP_FRONTEND_URL`, `KAKAO_ADMIN_KEY`
 - MinIO: `MINIO_ENDPOINT`, `MINIO_PUBLIC_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`
 - Profile: `SPRING_PROFILES_ACTIVE`
+
+`GEMINI_API_KEY` is required only by the optional external AI service referenced by development Compose; this backend does not implement AI-provider integration.
 
 `application.properties`는 `secret` profile을 include하지만 repository에는 `application-secret.properties`가 없습니다. Environment-specific 값의 실제 제공 방식은 실행 환경에서 준비해야 합니다.
 

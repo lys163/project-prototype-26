@@ -38,3 +38,12 @@ out/
 
 ### Docker ###
 .env
+.env.*
+!.env.example
+application-secret.properties
+application-secret.yml
+application-secret.yaml
+*.pem
+*.key
+*.p12
+*.pfx

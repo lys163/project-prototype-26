@@ -35,6 +35,8 @@
 
 [CONFIRMED] default application configuration은 localhost의 PostgreSQL 및 Redis를 전제로 합니다. development Compose file은 PostgreSQL, Redis, MinIO, ChromaDB, AI server, Prometheus, Grafana container를 정의합니다.
 
+[CONFIRMED] Local credential은 repository root의 ignored `.env`에서 제공할 수 있으며, tracked `.env.example`은 필요한 variable name만 제공합니다. Docker Compose는 `.env` substitution을 사용하고 native Spring Boot 실행은 optional `.env` config import를 사용합니다. Production/shared credential은 default 없는 external environment injection을 유지합니다.
+
 [CONFIRMED] development Compose file은 `../picturebook-ai`를 참조하지만, 조사한 workspace의 해당 위치에는 존재하지 않습니다.
 
 [CONFIRMED] Compose file은 이 repository에 없는 monitoring configuration path를 참조합니다.
