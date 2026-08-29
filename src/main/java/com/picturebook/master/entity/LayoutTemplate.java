@@ -19,7 +19,7 @@ import java.util.Map;
 @Entity
 @Table(name = "layout_templates",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_layout_templates_name", columnNames = "name")
+                @UniqueConstraint(name = "uq_layout_templates_name", columnNames = "name")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

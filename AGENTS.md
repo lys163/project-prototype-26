@@ -102,11 +102,11 @@
 
 ## 10. Database 규칙
 
-- PostgreSQL은 application database입니다. versioned migration이 도입되기 전까지 JPA entity mapping은 현재 schema evidence입니다.
+- PostgreSQL은 application database입니다. Flyway와 `src/main/resources/db/migration/V1__initial_schema.sql`이 versioned schema evidence이며, JPA entity mapping은 이를 검증하는 mapping evidence입니다.
 - 승인된 implementation scope에서 JPA entity 및 migration source를 작성·수정하고 격리된 local/test Database에서 migration을 검증할 수 있습니다. source 변경과 Database에서 변경을 실제 실행하는 행위를 구분합니다.
 - staging/production Database의 schema, data, instance를 실제로 변경하거나 destructive migration, production data backfill, restore를 수행하려면 target environment, 작업 scope, backup 및 rollback plan을 확인한 뒤 별도의 명시적인 authorization을 받아야 합니다.
 - 명시적인 user authorization 없이 `ddl-auto` behavior를 변경하지 않습니다.
-- migration mechanism이 도입되면 승인된 모든 persistent-schema change에 versioned migration을 추가합니다.
+- 승인된 모든 persistent-schema change에는 새 versioned migration을 추가합니다. 적용 완료된 migration은 수정하지 않습니다.
 - 장기 production schema migration strategy로 Hibernate `create` 또는 `update`에 의존하지 않습니다.
 - 모든 schema change에 대해 constraint, index, ownership/authorization, data backfill, rollback, compatibility를 검토합니다.
 - 기존 entity가 요구하는 UUID 및 `jsonb` mapping compatibility를 보존합니다.

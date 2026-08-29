@@ -27,7 +27,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "books",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_books_share_link_token", columnNames = "share_link_token")
+                @UniqueConstraint(name = "uq_books_share_link_token", columnNames = "share_link_token")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

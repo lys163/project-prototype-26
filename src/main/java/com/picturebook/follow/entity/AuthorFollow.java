@@ -25,7 +25,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "author_follows",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_author_follows_follower_author",
+                @UniqueConstraint(name = "uq_author_follows_follower_author",
                         columnNames = {"follower_id", "author_id"})
         },
         indexes = {

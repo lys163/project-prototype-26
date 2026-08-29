@@ -20,8 +20,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
-                @UniqueConstraint(name = "uk_users_provider", columnNames = {"provider", "provider_id"})
+                @UniqueConstraint(name = "uq_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uq_users_provider_provider_id", columnNames = {"provider", "provider_id"})
         })
 @SQLRestriction("is_active = true")
 @Getter

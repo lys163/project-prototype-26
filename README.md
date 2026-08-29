@@ -16,7 +16,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 
 ### 구현 완료
 
-다음 항목은 source/API level에서 확인됐습니다. Gradle test와 clean build는 실행 검증됐지만 application runtime은 아직 검증되지 않았습니다.
+다음 항목은 source/API level에서 확인됐습니다. Gradle test와 clean build, development Docker PostgreSQL의 Flyway V1 적용 및 application 재시작 validation은 local에서 확인됐습니다. Host-oriented Compose와 production runtime은 별도 검증 대상입니다.
 
 - Kakao/Naver OAuth2 social login
 - JWT access token과 Redis refresh token 기반 인증
@@ -37,7 +37,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 - AI provider client, asynchronous worker 및 generation orchestration
 - Keyword Search 및 별도 search engine integration
 - 전체 API contract 및 integration test coverage 확대
-- Versioned Database migration
+- Reference-data seed policy 및 V2 이상 schema migration 운영 검증
 - AWS target architecture 설계와 infrastructure 구축
 - 기존 PostgreSQL·Redis·MinIO의 migration 및 cutover
 - 누락된 monitoring configuration과 재현 가능한 deployment 검증
@@ -60,7 +60,7 @@ AI provider/model, Queue, Vector Database, Database migration 도구, AWS Servic
 | AI | AI-generation entity와 비활성화된 development Compose 예시만 존재. 실행 integration은 미구현 |
 | AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
 | Test | JUnit Platform, Web MVC/Security test support, 11개 test class. 최근 기록된 전체 Gradle 실행은 91개 test PASS |
-| Database migration | Versioned migration 도구와 migration file 없음 |
+| Database migration | Flyway와 `V1__initial_schema.sql`; default/Compose Hibernate schema mode는 `validate` |
 
 ## 4. Architecture 개요
 
@@ -120,7 +120,7 @@ Windows:
 .\gradlew.bat bootRun
 ```
 
-Gradle clean build는 검증됐지만 위 `bootRun` 명령과 application runtime은 검증하지 않았습니다. Native 기본값은 PostgreSQL `localhost:5432/postgres`, Redis `localhost:6379`, Backend `localhost:8080`이며 Development Compose의 database name과 일치합니다. MinIO를 포함한 필요한 environment variable도 먼저 준비돼야 합니다.
+Gradle clean build와 development Docker Compose의 Flyway V1/application 재시작 validation은 확인됐습니다. 위 native `bootRun`과 host-oriented Compose/prod runtime은 별도 검증 대상입니다. Native 기본값은 PostgreSQL `localhost:5432/postgres`, Redis `localhost:6379`, Backend `localhost:8080`이며 Development Compose의 database name과 일치합니다. MinIO를 포함한 필요한 environment variable도 먼저 준비돼야 합니다.
 
 ### Build 및 Test
 

@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(
         name = "book_likes",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_book_likes_user_book",
+                name = "uq_book_likes_user_book",
                 columnNames = {"user_id", "book_id"}
         )
 )

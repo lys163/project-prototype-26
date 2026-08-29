@@ -30,7 +30,7 @@ public class BookCharacter extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_characters_book_id"))
+            foreignKey = @ForeignKey(name = "fk_characters_book"))
     private Book book;
 
     @Column(name = "name", nullable = false, length = 100)

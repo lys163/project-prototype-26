@@ -90,7 +90,7 @@
 - Auto-save controller, service, repository
 - Purchase 생성·결제 API
 - Font, LayoutTemplate, StylePreset 관리 API
-- Versioned database migration
+- Reference-data seed policy와 V2 이상 migration 운영 검증
 - AWS infrastructure, IaC, SDK 및 AWS deployment
 - Repository 내부의 완전한 monitoring configuration
 - Development Compose 및 native application runtime의 실행 검증
@@ -105,8 +105,8 @@
 - 대부분 identifier에는 generated UUID를 사용하며 category/style/layout/font에는 identity ID를 사용합니다.
 - `auto_save_snapshots.snapshot_data`, `pages.layout_override`, `layout_templates.layout_config`는 PostgreSQL `jsonb`로 mapping됩니다.
 - `Book`은 JPA relationship으로 `Page`와 `BookCharacter`를 소유합니다. 다수의 다른 aggregate reference는 JPA association이 아니라 scalar UUID/ID field입니다.
-- Default/development configuration은 Hibernate `create`, production Compose는 `update`를 설정합니다.
-- Flyway, Liquibase, SQL migration directory, versioned migration file은 없습니다.
+- Default/development/host-oriented Compose configuration은 Hibernate `validate`를 설정합니다.
+- Flyway와 `src/main/resources/db/migration/V1__initial_schema.sql`이 있으며, V1은 빈 database schema를 생성합니다.
 
 [UNKNOWN] 실제 database schema, migration history, data, record count, backup, restore 가능 여부, production connection 상태는 repository만으로 확인할 수 없습니다.
 
@@ -195,8 +195,8 @@
 | Gap | Evidence |
 | --- | --- |
 | Test coverage 제한 | 11개 test class와 최근 기록된 91개 test는 Security/Auth/Storage 및 대표 ownership의 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
-| Runtime 미검증 | Gradle test와 clean build는 PASS했지만 application과 Compose는 실행하지 않았습니다. |
-| Versioned database migration 부재 | Flyway/Liquibase dependency 또는 migration file이 없습니다. |
+| Runtime 검증 범위 제한 | Development Docker PostgreSQL의 Flyway V1과 application 재시작 validation은 확인됐지만, native 실행, host-oriented Compose 및 production runtime은 검증하지 않았습니다. |
+| Migration integration test 공백 | Flyway V1과 Hibernate `validate`는 있으나 isolated PostgreSQL migration integration test는 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
 | Search implementation 부재 | API/service/query/indexing integration이 없습니다. |
 | Book creation/editing 부재 | Book/Page/Character 생성·편집 controller/service flow가 없습니다. |
@@ -215,7 +215,7 @@
 - MinIO startup logic은 확정된 public image 정책에 따라 구성된 bucket에 public read를 부여합니다.
 - Storage quota/rate limit 및 old/failed/orphan object cleanup은 아직 없습니다.
 - security configuration은 일치하는 규칙이 없는 request를 `denyAll`로 차단합니다.
-- Production schema management는 Hibernate `update`로 구성되어 있고, default/development setting은 `create`를 사용합니다.
+- Default/development/host-oriented Compose schema mode는 Hibernate `validate`이며 Flyway V1이 schema를 관리합니다.
 - GitHub Actions deployment는 host `.env`를 workspace로 복사하고 service를 먼저 중단한 뒤 재기동합니다.
 - 일부 Compose image는 immutable version/digest 대신 `latest` tag를 사용합니다.
 
@@ -235,7 +235,7 @@
 - 새 endpoint 추가 시 explicit authentication, role 및 object-level authorization 회귀 검토
 - AI generation의 quota/rate limit 및 storage usage 정책 결정
 - Profile/AI image의 old/failed/orphan object cleanup lifecycle 결정
-- Production에서 Hibernate `create/update` 의존을 제거하기 위한 versioned migration approach 결정
+- V2 이상 schema migration의 compatibility, backfill, backup/rollback 및 production verification approach 결정
 - 기존 PostgreSQL export/import, backup, rollback 및 data verification plan
 - 기존 Redis refresh token cutover plan
 - 기존 MinIO object inventory, migration, URL compatibility 및 rollback plan

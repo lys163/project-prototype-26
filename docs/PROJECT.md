@@ -66,7 +66,7 @@ src/main/java/com/picturebook/
 
 [CONFIRMED] Redis는 현재 OAuth2 login의 refresh token을 user별 key로 저장·조회하고, logout에서 요청 token과 current value가 exact match일 때 원자적으로 삭제하는 데 사용됩니다. Development Compose의 Redis host publish는 `127.0.0.1:6379`로 제한됩니다. Cache, queue, Spring session 또는 distributed lock 용도는 발견되지 않았습니다.
 
-[CONFIRMED] 이 repository에는 AWS infrastructure, AWS IaC, versioned database migration tool/file이 없습니다.
+[CONFIRMED] 이 repository에는 AWS infrastructure와 AWS IaC가 없습니다. Database schema migration은 Flyway와 `src/main/resources/db/migration/V1__initial_schema.sql`으로 관리하며 Hibernate schema mode는 `validate`입니다.
 
 ## Test 상태
 

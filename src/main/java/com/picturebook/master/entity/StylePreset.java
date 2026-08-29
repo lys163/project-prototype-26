@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "style_presets",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_style_presets_name", columnNames = "name")
+                @UniqueConstraint(name = "uq_style_presets_name", columnNames = "name")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

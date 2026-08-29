@@ -86,7 +86,7 @@ Production Compose
 
 [CONFIRMED] Development Compose의 active service는 application, PostgreSQL, Redis, MinIO이고 Redis host port는 loopback에만 publish됩니다. Host-oriented Compose는 external PostgreSQL/Redis/MinIO와 repository에 없는 monitoring configuration을 전제로 합니다.
 
-[CONFIRMED] Flyway, Liquibase, versioned migration directory/file은 없으며 default/development는 Hibernate `create`, production Compose는 `update`를 설정합니다.
+[CONFIRMED] Flyway와 `src/main/resources/db/migration/V1__initial_schema.sql`이 있으며 default/development/host-oriented Compose는 Hibernate `validate`를 설정합니다. 적용된 V1은 수정하지 않고 이후 변경은 V2 이상 forward migration으로 추가합니다.
 
 [UNKNOWN] AWS target architecture, AWS Service, IaC 도구는 아직 결정되지 않았습니다.
 

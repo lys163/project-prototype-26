@@ -7,7 +7,7 @@
 ## 확인된 기준선
 
 - PostgreSQL은 JPA/Hibernate를 통해 사용됩니다.
-- 이 repository에는 versioned migration tool 또는 migration file이 없습니다.
+- 이 repository는 Flyway와 `src/main/resources/db/migration/V1__initial_schema.sql`을 사용합니다. 적용 완료된 migration은 수정하지 않으며 이후 변경은 새 versioned migration으로 추가합니다.
 - 기존 entity mapping에는 UUID와 `jsonb` field가 포함됩니다.
 - 실제 database content와 backup status는 repository evidence만으로는 `[UNKNOWN]`입니다.
 

@@ -24,7 +24,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "pages",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_pages_book_page_number",
+                @UniqueConstraint(name = "uq_pages_book_page_number",
                         columnNames = {"book_id", "page_number"})
         })
 @Getter
@@ -38,7 +38,7 @@ public class Page extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_pages_book_id"))
+            foreignKey = @ForeignKey(name = "fk_pages_book"))
     private Book book;
 
     @Column(name = "page_number", nullable = false)
@@ -67,7 +67,9 @@ public class Page extends BaseTimeEntity {
     @ManyToMany
     @JoinTable(name = "page_characters",
             joinColumns = @JoinColumn(name = "page_id"),
-            inverseJoinColumns = @JoinColumn(name = "character_id"))
+            inverseJoinColumns = @JoinColumn(name = "character_id"),
+            foreignKey = @ForeignKey(name = "fk_page_characters_page"),
+            inverseForeignKey = @ForeignKey(name = "fk_page_characters_character"))
     private Set<BookCharacter> characters = new LinkedHashSet<>();
 
     // ── 팩토리 메서드 (Book AR에서 호출) ──
