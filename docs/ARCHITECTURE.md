@@ -23,7 +23,7 @@ GitHub Actions CI (main push / main 대상 Pull Request, ubuntu-latest)
   -> deployment 없음
 
 Legacy Build & Deploy (main push, self-hosted runner 필요)
-  -> 현재 등록 runner 없음: Queued
+  -> 현재 runner 등록·실행 상태는 repository만으로 확인 불가
   -> runner가 있다면 host 고정 path의 .env / Compose / optional monitoring 복사
   -> docker compose down / docker compose up -d --build
 
@@ -35,7 +35,7 @@ Production Compose
 
 [CONFIRMED] Production Compose는 `host.docker.internal` 또는 environment variable을 통해 Compose stack 외부의 PostgreSQL, Redis, MinIO에 접근합니다.
 
-[CONFIRMED] `.github/workflows/ci.yml`은 GitHub-hosted runner에서 build/test만 수행하며 실제 `main` push 실행이 PASS했습니다. `.github/workflows/deploy.yml`은 application health verification, production approval, rollback 단계가 없는 legacy CD 설정이며 현재 등록된 self-hosted runner가 없어 실행되지 않습니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 GitHub-hosted runner에서 build/test만 수행합니다. `.github/workflows/deploy.yml`은 application health verification, production approval, rollback 단계가 없는 legacy CD 설정입니다. 현재 self-hosted runner 및 원격 workflow 상태는 repository만으로 확인할 수 없습니다.
 
 ## 주요 component
 
@@ -82,7 +82,7 @@ Production Compose
 
 ## 현재 operational gap
 
-[CONFIRMED] 이 repository에는 11개 test class가 있으며 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test와 clean build PASS입니다. Test는 SecurityConfig, OAuth/Logout, service ownership과 Storage behavior를 다루지만 전체 API/runtime coverage는 아닙니다.
+[CONFIRMED] 이 repository에는 11개 test class가 있으며 2026-08-29 전체 Gradle test 91개를 재실행해 PASS했습니다. Test는 SecurityConfig, OAuth/Logout, service ownership과 Storage behavior를 다루지만 전체 API/runtime coverage는 아닙니다. Java main source의 unchecked/unsafe operation 및 test source의 deprecated API compiler warning이 출력됩니다.
 
 [CONFIRMED] Development Compose의 active service는 application, PostgreSQL, Redis, MinIO이고 Redis host port는 loopback에만 publish됩니다. Host-oriented Compose는 external PostgreSQL/Redis/MinIO와 repository에 없는 monitoring configuration을 전제로 합니다.
 

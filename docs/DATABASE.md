@@ -58,4 +58,6 @@
 
 [UNKNOWN] 이 repository에는 database dump, migration history, connection information, schema snapshot, seed data, record count, backup, production database가 없습니다.
 
-[CONFIRMED] 사용자는 현재 AWS infrastructure가 없다고 밝혔습니다. 따라서 AWS RDS database는 기존 project resource가 아닙니다.
+[CONFIRMED] 사용자 확인에 따라 현재 deployed infrastructure는 없습니다. 이 repository에도 AWS infrastructure definition이 없습니다.
+
+[UNKNOWN] 실제 AWS RDS database 또는 다른 외부 database resource의 존재·상태는 repository만으로 확인할 수 없습니다.

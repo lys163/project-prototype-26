@@ -16,7 +16,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 
 ### 구현 완료
 
-다음 항목은 source/API level에서 확인됐습니다. Gradle test와 clean build, development Docker PostgreSQL의 Flyway V1 적용 및 application 재시작 validation은 local에서 확인됐습니다. Host-oriented Compose와 production runtime은 별도 검증 대상입니다.
+다음 항목은 source/API level에서 확인됐습니다. 2026-08-29 전체 Gradle test 91개를 재실행해 PASS했지만, Development Compose·native application·host-oriented Compose·production runtime은 별도 검증 대상입니다.
 
 - Kakao/Naver OAuth2 social login
 - JWT access token과 Redis refresh token 기반 인증
@@ -55,11 +55,11 @@ AI provider/model, Queue, Vector Database, AWS Service와 IaC 도구는 아직 �
 | Authentication | Spring Security, OAuth2 Client, Kakao/Naver, JWT |
 | API 문서 | SpringDoc OpenAPI, Swagger UI |
 | Container | Docker, Docker Compose |
-| CI/CD | GitHub-hosted `ubuntu-latest`에서 build/test를 수행하는 CI. 별도의 legacy self-hosted Compose deployment workflow는 runner 부재로 실행되지 않음 |
+| CI/CD | GitHub-hosted `ubuntu-latest`에서 build/test를 수행하는 CI와 self-hosted runner를 요구하는 legacy Compose deployment workflow가 분리돼 있음. 현재 원격 workflow/runner 상태는 repository만으로 확인할 수 없음 |
 | Monitoring | Spring Actuator와 Prometheus registry. Development Compose의 Prometheus/Grafana는 비활성화돼 있고 host-oriented Compose 정의가 mount하는 monitoring file은 누락됨 |
 | AI | AI-generation entity와 비활성화된 development Compose 예시만 존재. 실행 integration은 미구현 |
 | AWS | 현재 infrastructure·SDK·IaC 없음. Target architecture 설계 전 |
-| Test | JUnit Platform, Web MVC/Security test support, 11개 test class. 최근 기록된 전체 Gradle 실행은 91개 test PASS |
+| Test | JUnit Platform, Web MVC/Security test support, 11개 test class. 2026-08-29 전체 Gradle test 91개 PASS |
 | Database migration | Flyway와 `V1__initial_schema.sql`; default/Compose Hibernate schema mode는 `validate` |
 
 ## 4. Architecture 개요
@@ -75,7 +75,7 @@ Frontend / External Client (이 repository에 없음)
        -> ObjectStoragePort / MinIO SDK -> MinIO
 ```
 
-현재 `main` push와 `main` 대상 Pull Request에서는 GitHub-hosted `ubuntu-latest` runner가 Gradle build/test CI를 수행하며 deployment는 실행하지 않습니다. 기존 `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted Compose deployment 설정이지만, 현재 등록된 self-hosted runner가 없어 Queued 상태가 됩니다. Production Compose는 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 존재한다고 가정합니다.
+현재 `main` push와 `main` 대상 Pull Request에서는 GitHub-hosted `ubuntu-latest` runner가 Gradle build/test CI를 수행하며 deployment는 실행하지 않습니다. 기존 `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted Compose deployment 설정입니다. 현재 self-hosted runner 및 원격 workflow 상태는 repository만으로 확인할 수 없습니다. Production Compose는 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 존재한다고 가정합니다.
 
 AWS infrastructure는 아직 존재하지 않으며 미래 AWS Architecture도 결정되지 않았습니다. 현재 구조와 향후 AWS target을 동일한 Architecture로 취급하지 않습니다.
 
@@ -120,7 +120,7 @@ Windows:
 .\gradlew.bat bootRun
 ```
 
-Gradle clean build와 development Docker Compose의 Flyway V1/application 재시작 validation은 확인됐습니다. 위 native `bootRun`과 host-oriented Compose/prod runtime은 별도 검증 대상입니다. Native 기본값은 PostgreSQL `localhost:5432/postgres`, Redis `localhost:6379`, Backend `localhost:8080`이며 Development Compose의 database name과 일치합니다. MinIO를 포함한 필요한 environment variable도 먼저 준비돼야 합니다.
+2026-08-29 전체 Gradle test는 재실행해 PASS했습니다. 위 native `bootRun`, Development Compose, host-oriented Compose 및 production runtime은 별도 검증 대상입니다. Native 기본값은 PostgreSQL `localhost:5432/postgres`, Redis `localhost:6379`, Backend `localhost:8080`이며 Development Compose의 database name과 일치합니다. MinIO를 포함한 필요한 environment variable도 먼저 준비돼야 합니다.
 
 ### Build 및 Test
 
@@ -138,7 +138,7 @@ Windows:
 .\gradlew.bat test
 ```
 
-현재 `src/test`에는 SecurityConfig, OAuth/Logout, service ownership과 Storage policy/controller/adapter를 다루는 11개 test class가 있습니다. 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test와 clean build PASS이며, 현재 Logout working-tree 변경은 아직 원격 CI 실행 전입니다. 이 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다.
+현재 `src/test`에는 SecurityConfig, OAuth/Logout, service ownership과 Storage policy/controller/adapter를 다루는 11개 test class가 있습니다. 2026-08-29 전체 Gradle test 91개를 재실행해 PASS했습니다. 이 안전망은 전체 API contract 또는 application runtime 검증을 의미하지 않습니다. Java main source의 unchecked/unsafe operation 및 test source의 deprecated API compiler warning은 남아 있습니다.
 
 ### Docker Compose
 

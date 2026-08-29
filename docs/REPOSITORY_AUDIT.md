@@ -4,32 +4,13 @@
 
 | 항목 | 기준 |
 | --- | --- |
-| Audit 날짜 | 2026-08-22 |
+| Audit 날짜 | 2026-08-29 |
 | Branch | `main` |
-| 최초 audit source 기준 commit | `d6918d6` |
-| 최초 audit working tree | 재조사 시작 시 clean |
-| P0-1 source 기준 commit | `1b56e47` |
-| P0-1 상태 갱신 | 2026-08-22, 최소 test/CI 안전망 검증 결과 반영 |
-| P0-2 OAuth logging source 기준 commit | `bc1bfd8` |
-| P0-2 OAuth logging CI | `main` push PASS 확인 |
-| P0-2 Reading Goal source 기준 commit | `ab96932` |
-| P0-2 Reading Goal CI | `main` push PASS 확인 |
-| P0-2 Reading Progress source 기준 commit | `6d04623` |
-| P0-2 Reading Progress CI | `main` push PASS 확인 |
-| P0-2 Profile authorization source 기준 commit | `f903d13` |
-| P0-2 Monthly Sales authorization local 검증 | 현재 working tree의 focused test, 전체 test, clean build PASS |
-| P0-2 Category POST 비활성화 local 검증 | 2026-08-23, 현재 working tree의 focused test, 전체 test, clean build PASS |
-| OAuth access-token 전달 개선 | commit `dfe5cc5`, callback query 제거 및 refresh 기반 전달 |
-| Authorization fail-closed | commit `94feb33`, explicit PUBLIC matcher 및 `anyRequest().denyAll()` |
-| Storage upload 보안 | commit `051316e`, signed POST policy·MIME·size·namespace 검증 |
-| Secret/Credential source fix | commit `1c3d9b1`, tracked plaintext 제거 및 environment reference 전환 |
-| 현재 working-tree 기준 | 2026-08-25, refresh-cookie 기반 idempotent Logout source/test/docs 포함 |
+| 현재 source 기준 commit | `d9aab1f` |
+| 재조사 시작 시 working tree | clean |
+| 이번 audit의 실행 검증 | 2026-08-29, `gradlew.bat test --rerun-tasks`: 91 tests PASS (failures/errors 0) |
 
-[CONFIRMED] 이 audit에서는 현재 checkout에서 사용할 수 있는 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration을 조사했습니다.
-
-[CONFIRMED] 최초 audit 중에는 application code, dependency, infrastructure resource, database, Docker container, external service, secret value를 변경하지 않았습니다. 이후 승인된 P0-1에서 test dependency, test source와 독립 CI workflow가 추가됐으며 application behavior와 external environment는 변경하지 않았습니다.
-
-[CONFIRMED] P0-1에서 focused test, 전체 Gradle test, clean build를 실행해 PASS했으며 GitHub Actions의 실제 `main` push CI도 PASS했습니다. Application runtime, Docker Compose, external dependency 연결 상태는 검증되지 않았습니다.
+[CONFIRMED] 이 refresh는 현재 checkout의 repository file, Java source, Gradle configuration, Docker file, GitHub Actions workflow, application configuration과 실행 가능한 Gradle test 결과를 조사했습니다. Application runtime, Docker Compose, external dependency 및 GitHub Actions의 현재 원격 실행 상태는 검증하지 않았습니다.
 
 ## 확인된 상태
 
@@ -38,17 +19,17 @@
 1. 이 repository는 Java 21 / Spring Boot 4 backend-only repository입니다.
 2. PostgreSQL, Redis, MinIO, OAuth2, JWT, Swagger, Actuator, Prometheus dependency/configuration이 존재합니다.
 3. Social login, token refresh/logout, browsing, author activity, reader feature, social interaction, reporting, storage presigned upload URL이 API level에서 구현되어 있습니다.
-4. frontend source, migration tooling, AWS IaC, AWS resource configuration은 없습니다.
+4. frontend source, AWS IaC, AWS resource configuration은 없습니다. Flyway migration tooling과 `V1__initial_schema.sql`은 존재합니다.
 5. 이 repository에는 search implementation이 없습니다.
 6. AI-generation entity는 있지만 AI server 또는 model provider를 호출하는 implementation은 없습니다.
 7. Development Compose에는 조사한 workspace에 없는 AI-server path를 가리키는 주석 예시가 있지만 해당 AI/ChromaDB service는 비활성화돼 있습니다.
-8. GitHub-hosted runner 기반 build/test CI와 legacy host-oriented self-hosted CD workflow가 분리되어 있습니다. 현재 self-hosted runner가 없어 legacy workflow는 실행되지 않습니다.
-9. 사용자는 현재 AWS infrastructure가 없음을 확인했습니다.
-10. `src/main/java/com/picturebook` 아래에는 145개 Java main source, 13개 controller, 17개 service, 12개 repository, 20개 JPA entity가 있습니다.
+8. GitHub-hosted runner 기반 build/test CI와 self-hosted runner를 요구하는 legacy host-oriented CD workflow가 분리되어 있습니다. 현재 self-hosted runner 등록·workflow 실행 상태는 repository만으로 확인할 수 없습니다.
+9. 이 repository에는 AWS infrastructure definition이 없습니다.
+10. `src/main/java/com/picturebook` 아래에는 147개 Java main source, 13개 controller, 17개 service, 12개 repository, 21개 `@Entity` mapping이 있습니다.
 
 ## 현재 구현 완료 영역
 
-[CONFIRMED] 다음 항목은 source/API level에서 구현되어 있습니다. Gradle test와 clean build는 검증됐지만 application runtime은 검증하지 않았습니다.
+[CONFIRMED] 다음 항목은 source/API level에서 구현되어 있습니다. 2026-08-29에 전체 Gradle test 91개를 재실행해 PASS했지만 application runtime은 검증하지 않았습니다.
 
 - Kakao/Naver OAuth2 social login
 - JWT bearer access token 생성 및 검증
@@ -66,7 +47,7 @@
 - MinIO 직접 upload/delete와 object-storage abstraction
 - Swagger/OpenAPI, Actuator, Prometheus dependency/configuration
 - MDC 및 AOP logging
-- explicit PUBLIC/authenticated/deny/fallback SecurityConfig, OAuth/Logout, service ownership 및 Storage behavior를 다루는 11개 test class. 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test PASS
+- explicit PUBLIC/authenticated/deny/fallback SecurityConfig, OAuth/Logout, service ownership 및 Storage behavior를 다루는 11개 test class. 2026-08-29 전체 Gradle test 91개 PASS
 - OAuth2 login 성공 log의 access token/refresh token 실제 값 출력 제거와 기존 Redis/cookie/redirect 계약 검증
 - `GET /api/reading-goals`와 `PUT /api/reading-goals`의 method-specific authentication 및 PUBLIC book endpoint 회귀 검증
 - Reading Progress GET/PUT/complete POST의 method-specific authentication 및 PUBLIC book 목록·상세 회귀 검증
@@ -92,7 +73,7 @@
 - Font, LayoutTemplate, StylePreset 관리 API
 - Reference-data seed policy와 V2 이상 migration 운영 검증
 - AWS infrastructure, IaC, SDK 및 AWS deployment
-- Repository 내부의 완전한 monitoring configuration
+- Production Compose용 완전한 monitoring configuration (Prometheus/Grafana mount 대상의 설정 파일 부재)
 - Development Compose 및 native application runtime의 실행 검증
 - Host-oriented Compose가 요구하는 monitoring configuration
 
@@ -166,8 +147,8 @@
 - Development Compose의 tracked plaintext credential/secret material은 제거되었습니다. Local credential은 ignored `.env`에서 제공하고 tracked `.env.example`에는 variable name만 둡니다. Historical exposure의 rotation 여부는 [UNKNOWN]입니다.
 - Default application configuration은 Database, OAuth 및 JWT credential을 environment variable로 참조합니다.
 - Production Compose는 주요 credential을 environment variable로 참조합니다.
-- Local `.env`는 Git에서 ignore되고 `.env.example`만 tracked됩니다. Frontend `.env.example`에는 API/proxy URL만 있으며 browser-side provider secret injection은 없습니다.
-- Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 repository에 등록된 self-hosted runner는 없습니다.
+- Local `.env`는 Git에서 ignore되고 `.env.example`만 tracked됩니다.
+- Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 runner 등록 및 workspace cleanup 상태는 repository만으로 확인할 수 없습니다.
 - Discord webhook은 GitHub Actions secret reference를 통해 전달됩니다.
 - AWS managed-secret integration 또는 다른 production secret-management implementation은 없습니다.
 
@@ -182,9 +163,9 @@
 - 주석의 `../picturebook-ai` path는 조사한 workspace에 존재하지 않습니다. Development monitoring mount도 비활성 상태입니다.
 - Production Compose는 application, Prometheus, Grafana만 정의하며 PostgreSQL, Redis, MinIO가 Compose stack 외부의 host 또는 external environment에 이미 존재한다고 가정합니다.
 - Production Compose는 `host.docker.internal` 및 environment variable을 통해 외부 PostgreSQL, Redis, MinIO에 연결합니다.
-- Production Compose가 mount하는 monitoring configuration은 repository에 없습니다.
-- `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 `./gradlew clean build --no-daemon`을 실행합니다. Secret 주입과 deployment step은 없으며 실제 `main` push 실행이 PASS했습니다.
-- `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 등록된 self-hosted runner가 없어 Queued 상태가 되며 deployment는 실행되지 않습니다.
+- Production Compose가 mount하는 Prometheus/Grafana configuration file은 repository에 없습니다. 해당 경로의 빈 directory는 configuration file을 대체하지 않습니다.
+- `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 `./gradlew clean build --no-daemon`을 실행합니다. Secret 주입과 deployment step은 없습니다. 현재 원격 실행 상태는 repository만으로 확인할 수 없습니다.
+- `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 self-hosted runner 등록 및 실행 상태는 repository만으로 확인할 수 없습니다.
 - Legacy workflow는 runner가 있을 경우 host의 고정 path에서 `.env`, `docker-compose.yml`, 선택적으로 monitoring directory를 복사한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행하도록 구성되어 있습니다.
 - Legacy workflow에는 application health verification, deployment approval, rollback 단계가 없으며 결과를 Discord webhook으로 알리도록 구성되어 있습니다.
 
@@ -194,16 +175,16 @@
 
 | Gap | Evidence |
 | --- | --- |
-| Test coverage 제한 | 11개 test class와 최근 기록된 91개 test는 Security/Auth/Storage 및 대표 ownership의 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
-| Runtime 검증 범위 제한 | Development Docker PostgreSQL의 Flyway V1과 application 재시작 validation은 확인됐지만, native 실행, host-oriented Compose 및 production runtime은 검증하지 않았습니다. |
+| Test coverage 제한 | 11개 test class와 2026-08-29 재실행한 91개 test는 Security/Auth/Storage 및 대표 ownership의 안전망이며 전체 endpoint/API/runtime를 검증하지 않습니다. |
+| Runtime 검증 범위 제한 | 이번 audit은 Gradle test만 실행했습니다. Development Compose, native 실행, host-oriented Compose 및 production runtime은 검증하지 않았습니다. |
 | Migration integration test 공백 | Flyway V1과 Hibernate `validate`는 있으나 isolated PostgreSQL migration integration test는 없습니다. |
 | AI implementation 부재 | generation controller/service/client/HTTP call/queue worker가 없습니다. |
 | Search implementation 부재 | API/service/query/indexing integration이 없습니다. |
 | Book creation/editing 부재 | Book/Page/Character 생성·편집 controller/service flow가 없습니다. |
 | Auto-save 실행 부재 | `AutoSaveSnapshot` entity만 있고 controller/service/repository가 없습니다. |
 | Purchase 생성 API 부재 | Purchase entity/service/repository는 있지만 purchase 생성 controller/API가 없습니다. |
-| Host-oriented Compose input 불완전 | Active Prometheus/Grafana service가 mount하는 monitoring path가 없습니다. Development AI/monitoring 예시는 비활성 상태입니다. |
-| CD safety gate 부재 | 독립 CI의 build/test는 PASS했지만 legacy CD에는 health verification, approval, rollback 단계가 없습니다. |
+| Host-oriented Compose input 불완전 | Active Prometheus/Grafana service가 mount하는 configuration file이 없습니다. Development AI/monitoring 예시는 비활성 상태입니다. |
+| CD safety gate 부재 | CI workflow와 legacy CD workflow는 분리되어 있고, legacy CD에는 health verification, approval, rollback 단계가 없습니다. 현재 원격 workflow 상태는 repository만으로 확인할 수 없습니다. |
 | AWS definition 부재 | AWS code, configuration, IaC가 없습니다. |
 
 ## code/configuration에서 기록한 risk
@@ -218,6 +199,7 @@
 - Default/development/host-oriented Compose schema mode는 Hibernate `validate`이며 Flyway V1이 schema를 관리합니다.
 - GitHub Actions deployment는 host `.env`를 workspace로 복사하고 service를 먼저 중단한 뒤 재기동합니다.
 - 일부 Compose image는 immutable version/digest 대신 `latest` tag를 사용합니다.
+- 2026-08-29 `gradlew.bat test --rerun-tasks`는 PASS했지만 Java main source의 unchecked/unsafe operation 및 test source의 deprecated API compiler warning이 출력됩니다. 기본 compiler output에는 정확한 source location이 포함되지 않았습니다.
 
 ## 추론된 영향
 

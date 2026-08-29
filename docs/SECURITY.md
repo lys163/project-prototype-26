@@ -51,7 +51,7 @@
 
 [CONFIRMED] 사용자 quota/rate limit과 old/failed/orphan image cleanup은 이 Storage 변경에 포함되지 않았습니다.
 
-[CONFIRMED] Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 현재 등록된 self-hosted runner가 없어 workflow는 Queued 상태가 됩니다. 새 `.github/workflows/ci.yml`은 GitHub-hosted runner에서 Secret 주입 없이 build/test만 수행합니다. Repository에는 AWS managed-secret integration 또는 다른 production secret-management implementation이 없습니다.
+[CONFIRMED] Legacy `.github/workflows/deploy.yml`은 self-hosted runner host의 `.env`를 workflow workspace로 복사하도록 구성되어 있습니다. 새 `.github/workflows/ci.yml`은 GitHub-hosted runner에서 Secret 주입 없이 build/test만 수행합니다. Repository에는 AWS managed-secret integration 또는 다른 production secret-management implementation이 없습니다. 현재 self-hosted runner 및 원격 workflow 상태는 repository만으로 확인할 수 없습니다.
 
 ## AUTH_SECURITY 후속 작업
 

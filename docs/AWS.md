@@ -2,15 +2,15 @@
 
 ## 현재 상태
 
-[CONFIRMED] 사용자는 현재 이 프로젝트에 AWS infrastructure가 없다고 밝혔습니다.
+[CONFIRMED] 사용자 확인에 따라 현재 deployed infrastructure는 없습니다. 이 repository에도 AWS infrastructure definition이 없습니다.
 
 [CONFIRMED] 이 repository에서 AWS SDK dependency, AWS resource configuration, S3 adapter, Terraform, CloudFormation, CDK, ECS, EKS, Lambda, EC2, RDS, ElastiCache, CloudFront, Route 53, ACM configuration은 발견되지 않았습니다.
 
 ## 기존 deployment evidence
 
-[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle build/test만 수행하며 production deployment는 실행하지 않습니다. 실제 `main` push CI 실행은 PASS했습니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle build/test만 수행하며 production deployment는 실행하지 않습니다. 현재 원격 CI 실행 상태는 repository만으로 확인할 수 없습니다.
 
-[CONFIRMED] `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 repository에 등록된 self-hosted runner가 없어 해당 workflow는 Queued 상태가 되며 deployment는 실행되지 않습니다.
+[CONFIRMED] `.github/workflows/deploy.yml`은 `main` push 시 trigger되는 legacy self-hosted CD 설정입니다. 현재 self-hosted runner 등록 및 workflow 실행 상태는 repository만으로 확인할 수 없습니다.
 
 [CONFIRMED] 해당 workflow는 runner host의 고정 path에서 `.env`, `docker-compose.yml`, 선택적으로 `monitoring`을 복사한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행합니다.
 

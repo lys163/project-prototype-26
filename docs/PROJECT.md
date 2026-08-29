@@ -2,9 +2,9 @@
 
 ## Baseline
 
-[CONFIRMED] 이 문서는 `docs/REPOSITORY_AUDIT.md`의 최초 2026-08-22 audit와 2026-08-25 현재 checkout을 함께 기준으로 합니다. 현재 committed baseline에는 OAuth 전달, fail-closed authorization, Storage, tracked credential 외부화가 포함되며 Logout 보안 변경은 working tree에 있습니다.
+[CONFIRMED] 이 문서는 2026-08-29 `docs/REPOSITORY_AUDIT.md`의 현재 source 기준 commit `d9aab1f`와 clean working tree를 기준으로 합니다.
 
-[CONFIRMED] P0-1에서 focused test, 전체 Gradle test, clean build를 실행해 PASS했으며 GitHub Actions CI의 실제 실행도 PASS했습니다. Application runtime과 Docker Compose 실행은 아직 검증되지 않았습니다.
+[CONFIRMED] 2026-08-29 전체 Gradle test 91개를 재실행해 PASS했습니다. Application runtime, Docker Compose 및 GitHub Actions의 현재 원격 실행 상태는 검증되지 않았습니다.
 
 ## 범위
 
@@ -43,7 +43,7 @@
 
 [CONFIRMED] Production Compose는 application, Prometheus, Grafana를 정의하고 PostgreSQL, Redis, MinIO가 Compose 외부의 host 또는 external environment에 이미 존재한다고 가정합니다.
 
-[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle clean build/test를 수행하며 deployment는 실행하지 않습니다. 실제 `main` push CI 실행은 PASS했습니다. 기존 `.github/workflows/deploy.yml`은 host의 고정 path와 self-hosted runner를 전제로 하는 legacy CD 설정으로 남아 있으며, 현재 등록된 self-hosted runner가 없어 trigger 후 Queued 상태가 됩니다. Legacy workflow에는 application health verification, production approval, rollback 단계가 없습니다.
+[CONFIRMED] `.github/workflows/ci.yml`은 `main` 대상 Pull Request와 `main` push에서 GitHub-hosted `ubuntu-latest` runner로 Gradle clean build/test를 수행하며 deployment는 실행하지 않습니다. 기존 `.github/workflows/deploy.yml`은 host의 고정 path와 self-hosted runner를 전제로 하는 legacy CD 설정으로 남아 있습니다. Legacy workflow에는 application health verification, production approval, rollback 단계가 없습니다. 현재 self-hosted runner 및 원격 workflow 상태는 repository만으로 확인할 수 없습니다.
 
 [UNKNOWN] 필요한 local credential과 image/build prerequisite를 포함한 Development Compose 및 native application runtime은 이번 문서 점검에서 실행 검증하지 않았습니다. Host-oriented Compose의 monitoring input은 repository만으로 충족되지 않습니다.
 
@@ -70,8 +70,8 @@ src/main/java/com/picturebook/
 
 ## Test 상태
 
-[CONFIRMED] `src/test`에는 explicit PUBLIC/authenticated/deny/fallback SecurityConfig, OAuth/Logout, service ownership과 Storage behavior를 다루는 11개 test class가 있습니다. 현재 문서에 기록된 최근 전체 Gradle 실행은 91개 test PASS입니다.
+[CONFIRMED] `src/test`에는 explicit PUBLIC/authenticated/deny/fallback SecurityConfig, OAuth/Logout, service ownership과 Storage behavior를 다루는 11개 test class가 있습니다. 2026-08-29 전체 Gradle test 91개를 재실행해 PASS했습니다.
 
-[CONFIRMED] 현재 checkout의 SecurityConfig focused test와 전체 Gradle clean build가 PASS한 기록이 있습니다. 현재 Logout working-tree 변경은 아직 원격 CI 실행 전입니다.
+[CONFIRMED] Java main source의 unchecked/unsafe operation 및 test source의 deprecated API compiler warning이 출력됩니다. 전체 API contract와 application runtime은 검증되지 않았습니다.
 
 [UNKNOWN] Application runtime과 external dependency가 필요한 통합 동작은 아직 검증되지 않았습니다.
