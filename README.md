@@ -42,7 +42,7 @@ PictureBook Server는 AI 그림책 서비스의 REST API와 persistence, authent
 - 기존 PostgreSQL·Redis·MinIO의 migration 및 cutover
 - 누락된 monitoring configuration과 재현 가능한 deployment 검증
 
-AI provider/model, Queue, Vector Database, Database migration 도구, AWS Service와 IaC 도구는 아직 결정되지 않았습니다.
+AI provider/model, Queue, Vector Database, AWS Service와 IaC 도구는 아직 결정되지 않았습니다. Database schema migration은 Flyway와 `V1__initial_schema.sql`으로 관리합니다.
 
 ## 3. 기술 Stack
 
